@@ -30,10 +30,11 @@ public interface MonthlyMetricRepository extends MongoRepository<MonthlyMetric, 
 
     void deleteByMonth(String month);
 
-    @Query("{ 'month': ?0, $and: [ " +
+    @Query(value = "{ 'month': ?0, $and: [ " +
            "{ $or: [ { $expr: { $eq: [?1, null] } }, { 'functionalHead': ?1 } ] }, " +
            "{ $or: [ { $expr: { $eq: [?2, null] } }, { 'classificationBand': ?2 } ] } " +
-           "] }")
+           "] }",
+           sort = "{ 'finalScore': -1, 'utilization': -1, 'notUtilising': 1 }")
     List<MonthlyMetric> findFilteredMetrics(String month, String functionalHead, String band);
 }
 

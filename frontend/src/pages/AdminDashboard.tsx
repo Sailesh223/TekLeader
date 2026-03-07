@@ -137,10 +137,10 @@ export default function AdminDashboard() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#00BFA5' }}>
         Admin Dashboard
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" sx={{ mb: 4, color: '#00897B', fontWeight: 500 }}>
         Manage leaderboard data, upload files, and configure system settings
       </Typography>
 
@@ -153,19 +153,25 @@ export default function AdminDashboard() {
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'all 0.3s ease',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(178, 223, 219, 0.2) 100%)',
+                backdropFilter: 'blur(20px)',
+                border: '2px solid rgba(0, 191, 165, 0.3)',
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0, 191, 165, 0.1)',
                 '&:hover': {
                   transform: card.disabled ? 'none' : 'translateY(-4px)',
-                  boxShadow: card.disabled ? 2 : 4,
+                  boxShadow: card.disabled ? '0 4px 20px rgba(0, 191, 165, 0.1)' : '0 12px 32px rgba(0, 191, 165, 0.25)',
+                  border: card.disabled ? '2px solid rgba(0, 191, 165, 0.3)' : '2px solid #00BFA5',
                 },
                 opacity: card.disabled ? 0.6 : 1,
               }}
             >
               <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ mb: 2 }}>{card.icon}</Box>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: '#2C3E50' }}>
                   {card.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: '#00897B' }}>
                   {card.description}
                 </Typography>
               </CardContent>
@@ -176,6 +182,16 @@ export default function AdminDashboard() {
                   disabled={card.disabled}
                   color={(card as any).buttonColor || 'primary'}
                   fullWidth
+                  sx={{
+                    background: (card as any).buttonColor === 'error'
+                      ? 'linear-gradient(135deg, #F44336 0%, #D32F2F 100%)'
+                      : 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+                    '&:hover': {
+                      background: (card as any).buttonColor === 'error'
+                        ? 'linear-gradient(135deg, #D32F2F 0%, #C62828 100%)'
+                        : 'linear-gradient(135deg, #00897B 0%, #00695C 100%)',
+                    },
+                  }}
                 >
                   {card.buttonText}
                 </Button>

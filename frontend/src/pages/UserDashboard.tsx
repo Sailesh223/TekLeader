@@ -45,6 +45,39 @@ const badgeIcons: Record<string, any> = {
   dumbbell: DumbbellIcon,
 };
 
+const GamifiedCard = ({ children, delay = 0, ...props }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.4, delay }}
+  >
+    <Card
+      {...props}
+      sx={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(178, 223, 219, 0.3) 100%)',
+        backdropFilter: 'blur(20px)',
+        border: '2px solid rgba(0, 191, 165, 0.3)',
+        borderRadius: 3,
+        overflow: 'hidden',
+        position: 'relative',
+        boxShadow: '0 8px 32px rgba(0, 191, 165, 0.15)',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: 'linear-gradient(90deg, #00BFA5 0%, #00897B 100%)',
+        },
+        ...props.sx,
+      }}
+    >
+      {children}
+    </Card>
+  </motion.div>
+);
+
 export default function UserDashboard() {
   const { selectedMonth, availableMonths, setSelectedMonth, setAvailableMonths } = useStore();
   const [managers, setManagers] = useState<ManagerEntry[]>([]);
@@ -124,13 +157,26 @@ export default function UserDashboard() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: 'primary.main' }}>
-        Leaderboard
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#00897B', mb: 3 }}>
+        🏆 Leaderboard
       </Typography>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
+          <FormControl
+            fullWidth
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                background: 'white',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(0, 191, 165, 0.3)' },
+                '&:hover fieldset': { borderColor: '#00BFA5' },
+                '&.Mui-focused fieldset': { borderColor: '#00BFA5', borderWidth: 2 },
+              },
+              '& .MuiInputLabel-root': { color: '#00897B' },
+              '& .MuiInputLabel-root.Mui-focused': { color: '#00BFA5' },
+            }}
+          >
             <InputLabel>Month</InputLabel>
             <Select
               value={selectedMonth || ''}
@@ -146,7 +192,20 @@ export default function UserDashboard() {
           </FormControl>
         </Grid>
         <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
+          <FormControl
+            fullWidth
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                background: 'white',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(0, 191, 165, 0.3)' },
+                '&:hover fieldset': { borderColor: '#00BFA5' },
+                '&.Mui-focused fieldset': { borderColor: '#00BFA5', borderWidth: 2 },
+              },
+              '& .MuiInputLabel-root': { color: '#00897B' },
+              '& .MuiInputLabel-root.Mui-focused': { color: '#00BFA5' },
+            }}
+          >
             <InputLabel>Functional Head</InputLabel>
             <Select
               value={functionalHead}
@@ -160,7 +219,20 @@ export default function UserDashboard() {
           </FormControl>
         </Grid>
         <Grid item xs={12} md={3}>
-          <FormControl fullWidth>
+          <FormControl
+            fullWidth
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                background: 'white',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(0, 191, 165, 0.3)' },
+                '&:hover fieldset': { borderColor: '#00BFA5' },
+                '&.Mui-focused fieldset': { borderColor: '#00BFA5', borderWidth: 2 },
+              },
+              '& .MuiInputLabel-root': { color: '#00897B' },
+              '& .MuiInputLabel-root.Mui-focused': { color: '#00BFA5' },
+            }}
+          >
             <InputLabel>Classification Band</InputLabel>
             <Select
               value={band}
@@ -178,10 +250,18 @@ export default function UserDashboard() {
         <Grid item xs={12} md={3}>
           <TextField
             fullWidth
-            label="Search Manager"
+            placeholder="Search Manager..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Type to search..."
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                background: 'white',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(0, 191, 165, 0.3)' },
+                '&:hover fieldset': { borderColor: '#00BFA5' },
+                '&.Mui-focused fieldset': { borderColor: '#00BFA5', borderWidth: 2 },
+              },
+            }}
           />
         </Grid>
       </Grid>
@@ -195,52 +275,96 @@ export default function UserDashboard() {
       {statistics && !loading && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} md={3}>
-            <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
-              <CardContent>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+            <GamifiedCard delay={0.1}>
+              <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 100,
+                    height: 100,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(0, 191, 165, 0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
                   Total Managers
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: '#00BFA5' }}>
                   {managers.length}
                 </Typography>
               </CardContent>
-            </Card>
+            </GamifiedCard>
           </Grid>
           <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Average Final Score
+            <GamifiedCard delay={0.2}>
+              <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 100,
+                    height: 100,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
+                  Average Score
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, mt: 1, color: 'primary.main' }}>
-                  {statistics.averageFinalScore?.toFixed(2) || '0.00'}
+                <Typography variant="h3" sx={{ fontWeight: 700, color: '#FFD700' }}>
+                  {statistics.averageFinalScore?.toFixed(1) || '0.0'}
                 </Typography>
               </CardContent>
-            </Card>
+            </GamifiedCard>
           </Grid>
           <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Average Utilization
+            <GamifiedCard delay={0.3}>
+              <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 100,
+                    height: 100,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(0, 191, 165, 0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
+                  Avg Utilization
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, mt: 1, color: 'success.main' }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: '#00BFA5' }}>
                   {statistics.averageUtilization?.toFixed(1) || '0.0'}%
                 </Typography>
               </CardContent>
-            </Card>
+            </GamifiedCard>
           </Grid>
           <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Gold Band Achievers
+            <GamifiedCard delay={0.4}>
+              <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 100,
+                    height: 100,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%)',
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
+                  🥇 Gold Achievers
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, mt: 1, color: '#FFD700' }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: '#FFD700' }}>
                   {statistics.bandDistribution?.Gold || 0}
                 </Typography>
               </CardContent>
-            </Card>
+            </GamifiedCard>
           </Grid>
         </Grid>
       )}
@@ -268,10 +392,27 @@ export default function UserDashboard() {
                 >
                   <Card
                     sx={{
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(178, 223, 219, 0.2) 100%)',
+                      backdropFilter: 'blur(20px)',
+                      border: '2px solid rgba(0, 191, 165, 0.3)',
+                      borderRadius: 3,
+                      position: 'relative',
+                      overflow: 'hidden',
                       transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 20px rgba(0, 191, 165, 0.1)',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: `linear-gradient(90deg, ${getBandColor(manager.classificationBand)} 0%, ${getBandColor(manager.classificationBand)}88 100%)`,
+                      },
                       '&:hover': {
                         transform: 'translateY(-4px)',
-                        boxShadow: 4,
+                        boxShadow: `0 12px 32px ${getBandColor(manager.classificationBand)}30`,
+                        border: `2px solid ${getBandColor(manager.classificationBand)}`,
                       },
                     }}
                   >
@@ -279,14 +420,19 @@ export default function UserDashboard() {
                       <Grid container spacing={2} alignItems="center">
                         <Grid item xs={12} md={1}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: '#00BFA5' }}>
                               {getRankMedal(manager.rank) || `#${manager.rank}`}
                             </Typography>
                             {manager.rankChange !== null && manager.rankChange !== 0 && (
                               <Chip
-                                label={manager.rankChange > 0 ? `+${manager.rankChange}` : manager.rankChange}
+                                label={manager.rankChange > 0 ? `↑${manager.rankChange}` : `↓${Math.abs(manager.rankChange)}`}
                                 size="small"
-                                color={manager.rankChange > 0 ? 'success' : 'error'}
+                                sx={{
+                                  bgcolor: manager.rankChange > 0 ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)',
+                                  color: manager.rankChange > 0 ? '#4CAF50' : '#F44336',
+                                  fontWeight: 600,
+                                  border: `1px solid ${manager.rankChange > 0 ? '#4CAF50' : '#F44336'}`,
+                                }}
                               />
                             )}
                           </Box>
@@ -294,14 +440,22 @@ export default function UserDashboard() {
 
                         <Grid item xs={12} md={3}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                            <Avatar
+                              sx={{
+                                bgcolor: getBandColor(manager.classificationBand),
+                                width: 48,
+                                height: 48,
+                                fontSize: '1.25rem',
+                                fontWeight: 700,
+                              }}
+                            >
                               {manager.manager.displayName.charAt(0)}
                             </Avatar>
                             <Box>
-                              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                              <Typography variant="body1" sx={{ fontWeight: 600, color: '#2C3E50' }}>
                                 {manager.manager.displayName}
                               </Typography>
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography variant="body2" sx={{ color: '#00897B' }}>
                                 {manager.functionalHead}
                               </Typography>
                             </Box>
@@ -312,35 +466,47 @@ export default function UserDashboard() {
                           <Chip
                             label={manager.classificationBand}
                             sx={{
-                              bgcolor: getBandColor(manager.classificationBand),
+                              background: `linear-gradient(135deg, ${getBandColor(manager.classificationBand)} 0%, ${getBandColor(manager.classificationBand)}CC 100%)`,
                               color: '#fff',
-                              fontWeight: 600,
+                              fontWeight: 700,
+                              fontSize: '0.875rem',
+                              px: 1,
+                              border: `1px solid ${getBandColor(manager.classificationBand)}`,
                             }}
                           />
                         </Grid>
 
                         <Grid item xs={12} md={2}>
                           <Box>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{ color: '#00897B', mb: 0.5, fontWeight: 500 }}>
                               Final Score
                             </Typography>
-                            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                              {manager.finalScore.toFixed(2)}
+                            <Typography variant="h5" sx={{ fontWeight: 700, color: '#00BFA5', mb: 1 }}>
+                              {manager.finalScore.toFixed(1)}
                             </Typography>
                             <LinearProgress
                               variant="determinate"
                               value={manager.finalScore}
-                              sx={{ mt: 1, height: 6, borderRadius: 3 }}
+                              sx={{
+                                height: 8,
+                                borderRadius: 4,
+                                bgcolor: 'rgba(0, 191, 165, 0.15)',
+                                '& .MuiLinearProgress-bar': {
+                                  background: 'linear-gradient(90deg, #00BFA5 0%, #00897B 100%)',
+                                  borderRadius: 4,
+                                  boxShadow: '0 2px 8px rgba(0, 191, 165, 0.3)',
+                                },
+                              }}
                             />
                           </Box>
                         </Grid>
 
                         <Grid item xs={12} md={2}>
                           <Box>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{ color: '#00897B', mb: 0.5, fontWeight: 500 }}>
                               Utilization
                             </Typography>
-                            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            <Typography variant="h5" sx={{ fontWeight: 700, color: '#00BFA5' }}>
                               {manager.utilization.toFixed(1)}%
                             </Typography>
                           </Box>
@@ -348,10 +514,10 @@ export default function UserDashboard() {
 
                         <Grid item xs={12} md={1}>
                           <Box>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{ color: '#00897B', mb: 0.5, fontWeight: 500 }}>
                               Team Size
                             </Typography>
-                            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            <Typography variant="h5" sx={{ fontWeight: 700, color: '#2C3E50' }}>
                               {manager.headcount}
                             </Typography>
                           </Box>
@@ -361,8 +527,12 @@ export default function UserDashboard() {
                           <IconButton
                             onClick={() => toggleExpand(manager.manager.id)}
                             sx={{
+                              color: '#00BFA5',
                               transform: expandedManager === manager.manager.id ? 'rotate(180deg)' : 'rotate(0deg)',
                               transition: 'transform 0.3s',
+                              '&:hover': {
+                                bgcolor: 'rgba(0, 191, 165, 0.1)',
+                              },
                             }}
                           >
                             <ExpandMoreIcon />
@@ -371,46 +541,54 @@ export default function UserDashboard() {
                       </Grid>
 
                       <Collapse in={expandedManager === manager.manager.id} timeout="auto" unmountOnExit>
-                        <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+                        <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(0, 191, 165, 0.2)' }}>
                           <Grid container spacing={3}>
                             <Grid item xs={12} md={6}>
-                              <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default' }}>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                  Score Breakdown
+                              <Paper
+                                elevation={0}
+                                sx={{
+                                  p: 3,
+                                  background: 'rgba(0, 191, 165, 0.05)',
+                                  border: '1px solid rgba(0, 191, 165, 0.2)',
+                                  borderRadius: 2,
+                                }}
+                              >
+                                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#00BFA5', mb: 2 }}>
+                                  📊 Score Breakdown
                                 </Typography>
                                 <Table size="small">
                                   <TableBody>
-                                    <TableRow>
+                                    <TableRow sx={{ '& td': { border: 'none', color: '#2C3E50' } }}>
                                       <TableCell>Utilization (70%)</TableCell>
                                       <TableCell align="right">
                                         <strong>{manager.utilization.toFixed(2)}</strong>
                                       </TableCell>
-                                      <TableCell align="right">
+                                      <TableCell align="right" sx={{ color: '#00BFA5 !important', fontWeight: 600 }}>
                                         {(manager.utilization * 0.7).toFixed(2)}
                                       </TableCell>
                                     </TableRow>
-                                    <TableRow>
+                                    <TableRow sx={{ '& td': { border: 'none', color: '#2C3E50' } }}>
                                       <TableCell>Team Size Score (20%)</TableCell>
                                       <TableCell align="right">
                                         <strong>{manager.teamSizeScore.toFixed(2)}</strong>
                                       </TableCell>
-                                      <TableCell align="right">
+                                      <TableCell align="right" sx={{ color: '#00BFA5 !important', fontWeight: 600 }}>
                                         {(manager.teamSizeScore * 0.2).toFixed(2)}
                                       </TableCell>
                                     </TableRow>
-                                    <TableRow>
+                                    <TableRow sx={{ '& td': { border: 'none', color: '#2C3E50' } }}>
                                       <TableCell>Consistency Score (10%)</TableCell>
                                       <TableCell align="right">
                                         <strong>{manager.consistencyScore.toFixed(2)}</strong>
                                       </TableCell>
-                                      <TableCell align="right">
+                                      <TableCell align="right" sx={{ color: '#00BFA5 !important', fontWeight: 600 }}>
                                         {(manager.consistencyScore * 0.1).toFixed(2)}
                                       </TableCell>
                                     </TableRow>
-                                    <TableRow>
-                                      <TableCell sx={{ fontWeight: 700 }}>Final Score</TableCell>
+                                    <TableRow sx={{ '& td': { border: 'none', borderTop: '2px solid rgba(0, 191, 165, 0.3)', pt: 1 } }}>
+                                      <TableCell sx={{ fontWeight: 700, color: '#00897B !important' }}>Final Score</TableCell>
                                       <TableCell />
-                                      <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                                      <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.2rem', color: '#00BFA5 !important' }}>
                                         {manager.finalScore.toFixed(2)}
                                       </TableCell>
                                     </TableRow>
@@ -420,40 +598,48 @@ export default function UserDashboard() {
                             </Grid>
 
                             <Grid item xs={12} md={6}>
-                              <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default' }}>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                  Team Metrics
+                              <Paper
+                                elevation={0}
+                                sx={{
+                                  p: 3,
+                                  background: 'rgba(0, 191, 165, 0.05)',
+                                  border: '1px solid rgba(0, 191, 165, 0.2)',
+                                  borderRadius: 2,
+                                }}
+                              >
+                                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#00BFA5', mb: 2 }}>
+                                  👥 Team Metrics
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <PeopleIcon color="primary" />
+                                    <PeopleIcon sx={{ color: '#00BFA5' }} />
                                     <Box sx={{ flex: 1 }}>
-                                      <Typography variant="body2" color="text.secondary">
+                                      <Typography variant="body2" sx={{ color: '#00897B', fontWeight: 500 }}>
                                         Total Headcount
                                       </Typography>
-                                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#2C3E50' }}>
                                         {manager.headcount}
                                       </Typography>
                                     </Box>
                                   </Box>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <CheckCircleIcon color="success" />
+                                    <CheckCircleIcon sx={{ color: '#00BFA5' }} />
                                     <Box sx={{ flex: 1 }}>
-                                      <Typography variant="body2" color="text.secondary">
+                                      <Typography variant="body2" sx={{ color: '#00897B', fontWeight: 500 }}>
                                         1:1s Participated
                                       </Typography>
-                                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#2C3E50' }}>
                                         {manager.oneOnOnes}
                                       </Typography>
                                     </Box>
                                   </Box>
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <CancelIcon color="error" />
+                                    <CancelIcon sx={{ color: '#F44336' }} />
                                     <Box sx={{ flex: 1 }}>
-                                      <Typography variant="body2" color="text.secondary">
+                                      <Typography variant="body2" sx={{ color: '#00897B', fontWeight: 500 }}>
                                         Not Utilizing
                                       </Typography>
-                                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#2C3E50' }}>
                                         {manager.notUtilising}
                                       </Typography>
                                     </Box>
