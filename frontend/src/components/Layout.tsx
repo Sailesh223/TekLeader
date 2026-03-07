@@ -160,12 +160,14 @@ export default function Layout() {
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <AppBar
-          position="static"
+          position="sticky"
           elevation={0}
           sx={{
             background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
             borderBottom: '2px solid rgba(0, 191, 165, 0.3)',
             boxShadow: '0 2px 8px rgba(0, 191, 165, 0.2)',
+            top: 0,
+            zIndex: 1100,
           }}
         >
           <Toolbar>

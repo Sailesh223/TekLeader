@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,15 @@ public class LeaderboardController {
     public ResponseEntity<Map<String, Object>> deleteAllData() {
         Map<String, Object> result = leaderboardService.deleteAllData();
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/recalculate-ranks/{month}")
+    @Operation(summary = "Recalculate rankings", description = "Recalculate rankings for a specific month based on final score")
+    public ResponseEntity<Map<String, String>> recalculateRanks(@PathVariable String month) {
+        leaderboardService.recalculateRankings(month);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Rankings recalculated successfully for " + month);
+        return ResponseEntity.ok(response);
     }
 }
 

@@ -228,5 +228,47 @@ public class LeaderboardService {
             "deletedBadges", badgesCount
         );
     }
+
+    @Transactional
+    public void recalculateRankings(String month) {
+        log.info("Recalculating rankings for month: {}", month);
+
+        List<MonthlyMetric> metrics = monthlyMetricRepository.findByMonth(month);
+
+        // Fetch all managers for sorting
+        Set<String> managerIds = metrics.stream()
+            .map(MonthlyMetric::getManagerId)
+            .collect(Collectors.toSet());
+
+        Map<String, Manager> managerMap = managerRepository.findAllById(managerIds)
+            .stream()
+            .collect(Collectors.toMap(Manager::getId, m -> m));
+
+        // Sort by: 1. Final Score (DESC), 2. Utilization (DESC), 3. Not Utilising (ASC), 4. Name (ASC)
+        metrics.sort(Comparator
+            .comparing((MonthlyMetric m) -> m.getFinalScore(), Comparator.reverseOrder())
+            .thenComparing((MonthlyMetric m) -> m.getUtilization(), Comparator.reverseOrder())
+            .thenComparing((MonthlyMetric m) -> m.getNotUtilising())
+            .thenComparing(m -> {
+                Manager manager = managerMap.get(m.getManagerId());
+                return manager != null ? manager.getCanonicalName() : "";
+            })
+        );
+
+        // Assign ranks (rank 1 = highest score)
+        for (int i = 0; i < metrics.size(); i++) {
+            MonthlyMetric metric = metrics.get(i);
+            metric.setRank(i + 1);
+            if (i < 5) {
+                log.debug("Rank {}: Score={}, Manager ID={}", i + 1, metric.getFinalScore(), metric.getManagerId());
+            }
+        }
+
+        monthlyMetricRepository.saveAll(metrics);
+        log.info("Successfully recalculated rankings for {} managers in month: {}. Top score: {}, Bottom score: {}",
+            metrics.size(), month,
+            metrics.isEmpty() ? "N/A" : metrics.get(0).getFinalScore(),
+            metrics.isEmpty() ? "N/A" : metrics.get(metrics.size() - 1).getFinalScore());
+    }
 }
 
