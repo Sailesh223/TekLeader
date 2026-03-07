@@ -170,11 +170,12 @@ export default function UserDashboard() {
             startIcon={<PdfIcon />}
             onClick={() => exportLeaderboardToPDF(managers, selectedMonth, functionalHead, band)}
             sx={{
-              bgcolor: '#D32F2F',
-              '&:hover': { bgcolor: '#B71C1C' },
+              bgcolor: '#ef5757',
+              '&:hover': { bgcolor: '#f13f3f' },
               borderRadius: 2,
               textTransform: 'none',
               fontWeight: 600,
+              color: 'white',
               px: 3,
               py: 1,
               boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)',
