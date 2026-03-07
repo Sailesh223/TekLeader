@@ -82,16 +82,37 @@ export interface DeleteResponse {
   deletedBadges: number;
 }
 
+export interface FormulaConfig {
+  id?: string;
+  version?: number;
+  utilizationWeight: number;
+  teamSizeWeight: number;
+  consistencyWeight: number;
+  consistencyPenaltyMultiplier: number;
+  teamSizeMapping: {
+    '1-3': number;
+    '4-6': number;
+    '7-10': number;
+    '10+': number;
+  };
+  classificationThresholds?: any;
+  active?: boolean;
+  createdAt?: string;
+  createdBy?: string;
+}
+
 export const leaderboardApi = {
-  getLeaderboard: async (params: {
-    month: string;
-    functionalHead?: string;
-    band?: string;
-    search?: string;
-    page?: number;
-    size?: number;
-  }): Promise<LeaderboardResponse> => {
-    const response = await apiClient.get('/leaderboard', { params });
+  getLeaderboard: async (
+    month: string,
+    functionalHead: string = 'all',
+    band: string = 'all',
+    search: string = '',
+    page: number = 0,
+    size: number = 25
+  ): Promise<LeaderboardResponse> => {
+    const response = await apiClient.get('/leaderboard', {
+      params: { month, functionalHead, band, search, page, size }
+    });
     return response.data;
   },
 
@@ -125,6 +146,91 @@ export const uploadApi = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    });
+    return response.data;
+  },
+};
+
+export const formulaApi = {
+  getCurrentFormula: async (): Promise<FormulaConfig> => {
+    const response = await apiClient.get('/formula/current');
+    return response.data;
+  },
+
+  updateFormula: async (formula: FormulaConfig): Promise<any> => {
+    const response = await apiClient.post('/formula', formula);
+    return response.data;
+  },
+
+  getAllFormulas: async (): Promise<{ formulas: FormulaConfig[] }> => {
+    const response = await apiClient.get('/formula/all');
+    return response.data;
+  },
+};
+
+export interface ManagerHistoryResponse {
+  manager: {
+    id: string;
+    displayName: string;
+    email: string;
+    avatarUrl: string | null;
+  };
+  history: MonthlyPerformance[];
+  summary: PerformanceSummary;
+  teamMembers: TeamMember[];
+  allBadges: BadgeInfo[];
+}
+
+export interface MonthlyPerformance {
+  month: string;
+  rank: number;
+  rankChange: number | null;
+  finalScore: number;
+  utilization: number;
+  teamSizeScore: number;
+  consistencyScore: number;
+  classificationBand: string;
+  headcount: number;
+  oneOnOnes: number;
+  notUtilising: number;
+  functionalHead: string;
+  badges: BadgeInfo[];
+}
+
+export interface PerformanceSummary {
+  totalMonths: number;
+  bestRank: number;
+  bestRankMonth: string;
+  averageScore: number;
+  averageUtilization: number;
+  totalBadges: number;
+  consecutiveImprovements: number;
+  trend: 'improving' | 'declining' | 'stable';
+  scoreChange: number;
+  rankImprovement: number;
+  motivationalMessage: string;
+}
+
+export interface TeamMember {
+  name: string;
+  role: string;
+  utilization: number;
+}
+
+export interface BadgeInfo {
+  id: string;
+  code: string;
+  name: string;
+  iconKey: string;
+  color: string;
+  month: string;
+  metadata: any;
+}
+
+export const managerApi = {
+  getHistory: async (displayName: string): Promise<ManagerHistoryResponse> => {
+    const response = await apiClient.get('/manager/history', {
+      params: { displayName }
     });
     return response.data;
   },

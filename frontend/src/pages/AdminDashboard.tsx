@@ -106,7 +106,7 @@ export default function AdminDashboard() {
       title: 'View Leaderboard',
       description: 'View and manage leaderboard data for all months',
       icon: <LeaderboardIcon sx={{ fontSize: 48, color: 'primary.main' }} />,
-      action: () => navigate('/leaderboard'),
+      action: () => navigate('/admin/leaderboard'),
       buttonText: 'View',
     },
     {
@@ -121,17 +121,15 @@ export default function AdminDashboard() {
       title: 'Analytics',
       description: 'View detailed analytics and trends across months',
       icon: <AnalyticsIcon sx={{ fontSize: 48, color: 'primary.main' }} />,
-      action: () => {},
-      buttonText: 'Coming Soon',
-      disabled: true,
+      action: () => navigate('/admin/analytics'),
+      buttonText: 'View Analytics',
     },
     {
       title: 'Settings',
       description: 'Configure formula weights, badges, and classification bands',
       icon: <SettingsIcon sx={{ fontSize: 48, color: 'primary.main' }} />,
-      action: () => {},
-      buttonText: 'Coming Soon',
-      disabled: true,
+      action: () => navigate('/admin/settings'),
+      buttonText: 'Configure',
     },
   ];
 

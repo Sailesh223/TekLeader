@@ -95,20 +95,20 @@ export const theme = createTheme({
 
 export const bandColors = {
   Gold: {
-    main: '#FFD700',
-    gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+    main: '#FFD54F',
+    gradient: 'linear-gradient(135deg, #FFF59D 0%, #FFD54F 100%)',
   },
   Silver: {
-    main: '#C0C0C0',
-    gradient: 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)',
+    main: '#B0BEC5',
+    gradient: 'linear-gradient(135deg, #CFD8DC 0%, #B0BEC5 100%)',
   },
   Bronze: {
-    main: '#CD7F32',
-    gradient: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
+    main: '#FFB74D',
+    gradient: 'linear-gradient(135deg, #FFCC80 0%, #FFB74D 100%)',
   },
   'Ignition Zone': {
-    main: '#FF6B6B',
-    gradient: 'linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%)',
+    main: '#EF5350',
+    gradient: 'linear-gradient(135deg, #E57373 0%, #EF5350 100%)',
   },
 };
 

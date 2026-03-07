@@ -17,9 +17,11 @@ import {
   Login as LoginIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
+import { useStore } from '../store/useStore';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { setUserInfo } = useStore();
   const [loginMode, setLoginMode] = useState<'admin' | 'user'>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,15 +30,35 @@ export default function LoginPage() {
 
   const handleAdminLogin = () => {
     setError('');
-    
+
     if (email === 'jithu@gmail.com' && password === 'Jithu564@') {
+      setUserInfo({
+        email: 'jithu@gmail.com',
+        displayName: 'Admin',
+        isAdmin: true,
+      });
       navigate('/admin');
     } else {
       setError('Invalid credentials. Please try again.');
     }
   };
 
-  const handleSSOLogin = () => {
+  const handleUserLogin = () => {
+    setError('');
+
+    if (!email || email.trim() === '') {
+      setError('Please enter your name');
+      return;
+    }
+
+    // Use the entered name as displayName
+    const displayName = email.trim();
+
+    setUserInfo({
+      email: '', // No email for regular users
+      displayName,
+      isAdmin: false,
+    });
     navigate('/user');
   };
 
@@ -235,15 +257,30 @@ export default function LoginPage() {
             </Button>
           </Box>
         ) : (
-          <Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-              Click below to sign in with your Tekion SSO credentials
-            </Typography>
+          <Box component="form" onSubmit={(e) => { e.preventDefault(); handleUserLogin(); }}>
+            <TextField
+              fullWidth
+              placeholder="Enter your name (e.g., Abhinav Chourasia)"
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              sx={{
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  backgroundColor: '#F5F7FA',
+                  '& fieldset': { borderColor: 'transparent' },
+                  '&:hover fieldset': { borderColor: '#00BFA5' },
+                  '&.Mui-focused fieldset': { borderColor: '#00BFA5' },
+                },
+              }}
+              required
+            />
             <Button
               fullWidth
               variant="contained"
               size="large"
-              onClick={handleSSOLogin}
+              type="submit"
               sx={{
                 py: 1.8,
                 borderRadius: 3,
@@ -259,20 +296,9 @@ export default function LoginPage() {
                 },
               }}
             >
-              Login with SSO
+              <LoginIcon sx={{ mr: 1 }} />
+              Login
             </Button>
-            <Typography
-              variant="body2"
-              sx={{
-                mt: 3,
-                textAlign: 'center',
-                color: 'text.secondary',
-                cursor: 'pointer',
-                '&:hover': { color: 'primary.main' },
-              }}
-            >
-              Forgot Username / Password?
-            </Typography>
           </Box>
         )}
 

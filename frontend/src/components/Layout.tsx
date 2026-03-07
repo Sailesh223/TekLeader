@@ -45,6 +45,8 @@ export default function Layout() {
     { text: 'Dashboard', icon: <AdminIcon />, path: '/admin' },
     { text: 'Upload Data', icon: <UploadIcon />, path: '/admin/upload' },
     { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/admin/leaderboard' },
+    { text: 'Analytics', icon: <AnalyticsIcon />, path: '/admin/analytics' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
   ];
 
   const menuItems = isAdminPath ? adminMenuItems : userMenuItems;

@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Upload", description = "Excel file upload and data import APIs")
-@CrossOrigin(origins = "*")
 public class UploadController {
     
     private final ExcelImportService excelImportService;

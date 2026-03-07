@@ -26,6 +26,7 @@ public class ExcelImportService {
     private final ManagerRepository managerRepository;
     private final MonthlyMetricRepository monthlyMetricRepository;
     private final UploadHistoryRepository uploadHistoryRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final ScoringService scoringService;
     private final BadgeService badgeService;
     
@@ -119,6 +120,9 @@ public class ExcelImportService {
 
                     monthlyMetricRepository.save(metric);
 
+                    // Save team members
+                    saveTeamMembers(manager, month, agg.employees, uploadMode);
+
                     if (existing.isPresent()) {
                         updated++;
                     } else {
@@ -204,9 +208,18 @@ public class ExcelImportService {
 
         data.managerName = getCellValueAsString(row, columnMap.get("Manager Name"));
         data.functionalHead = getCellValueAsString(row, columnMap.get("Functional Head Name"));
+        data.preferredFullName = getCellValueAsString(row, columnMap.get("Preferred full name"));
+        data.preferredFirstName = getCellValueAsString(row, columnMap.get("Preferred first name"));
+        data.preferredLastName = getCellValueAsString(row, columnMap.get("Preferred last name"));
+        data.department = getCellValueAsString(row, columnMap.get("Department"));
+        data.directorName = getCellValueAsString(row, columnMap.get("Director Name"));
+        data.hrbp = getCellValueAsString(row, columnMap.get("HRBP"));
 
         Integer participatedCol = columnMap.get("1:1s Participated with Manager Final");
         data.participated = participatedCol != null ? getCellValueAsInt(row, participatedCol) : 0;
+
+        Integer setUpCol = columnMap.get("1:1s Set Up with Manager");
+        data.oneOnOnesSetUp = setUpCol != null ? getCellValueAsInt(row, setUpCol) : 0;
 
         return data;
     }
@@ -326,10 +339,11 @@ public class ExcelImportService {
             .stream()
             .collect(Collectors.toMap(Manager::getId, m -> m));
 
+        // Sort by: 1. Final Score (DESC), 2. Utilization (DESC), 3. Not Utilising (ASC), 4. Name (ASC)
         metrics.sort(Comparator
-            .comparing((MonthlyMetric m) -> m.getFinalScore()).reversed()
-            .thenComparing((MonthlyMetric m) -> m.getUtilization()).reversed()
-            .thenComparing((MonthlyMetric m) -> m.getNotUtilising())
+            .comparing((MonthlyMetric m) -> m.getFinalScore(), Comparator.reverseOrder())
+            .thenComparing((MonthlyMetric m) -> m.getUtilization(), Comparator.reverseOrder())
+            .thenComparing((MonthlyMetric m) -> m.getNotUtilising())  // ASC: lower is better
             .thenComparing(m -> {
                 Manager manager = managerMap.get(m.getManagerId());
                 return manager != null ? manager.getCanonicalName() : "";
@@ -366,10 +380,53 @@ public class ExcelImportService {
         return uploadHistoryRepository.save(history);
     }
 
+    private void saveTeamMembers(Manager manager, String month, List<EmployeeData> employees, String uploadMode) {
+        for (EmployeeData emp : employees) {
+            if (emp.preferredFullName == null || emp.preferredFullName.isEmpty()) {
+                continue;
+            }
+
+            String canonicalName = emp.preferredFullName.toLowerCase();
+
+            Optional<TeamMember> existing = teamMemberRepository
+                .findByManagerIdAndMonthAndCanonicalName(manager.getId(), month, canonicalName);
+
+            if (existing.isPresent() && "skip".equalsIgnoreCase(uploadMode)) {
+                continue;
+            }
+
+            TeamMember teamMember = existing.orElse(TeamMember.builder()
+                .managerId(manager.getId())
+                .month(month)
+                .canonicalName(canonicalName)
+                .build());
+
+            teamMember.setPreferredFullName(emp.preferredFullName);
+            teamMember.setPreferredFirstName(emp.preferredFirstName);
+            teamMember.setPreferredLastName(emp.preferredLastName);
+            teamMember.setDepartment(emp.department);
+            teamMember.setFunctionalHead(emp.functionalHead);
+            teamMember.setDirectorName(emp.directorName);
+            teamMember.setHrbp(emp.hrbp);
+            teamMember.setOneOnOnesParticipated(emp.participated);
+            teamMember.setOneOnOnesSetUp(emp.oneOnOnesSetUp);
+            teamMember.setIsUtilizing(emp.participated > 0);
+
+            teamMemberRepository.save(teamMember);
+        }
+    }
+
     private static class EmployeeData {
         String managerName;
         String functionalHead;
         int participated;
+        String preferredFullName;
+        String preferredFirstName;
+        String preferredLastName;
+        String department;
+        String directorName;
+        String hrbp;
+        int oneOnOnesSetUp;
     }
 
     private static class ManagerAggregation {
@@ -379,6 +436,7 @@ public class ExcelImportService {
         int oneOnOnes = 0;
         int notUtilising = 0;
         BigDecimal utilization = BigDecimal.ZERO;
+        List<EmployeeData> employees = new ArrayList<>();
 
         ManagerAggregation(String managerName, String functionalHead) {
             this.managerName = managerName;
@@ -386,6 +444,7 @@ public class ExcelImportService {
         }
 
         void addEmployee(EmployeeData emp) {
+            employees.add(emp);
             headcount++;
             if (emp.participated > 0) {
                 oneOnOnes++;

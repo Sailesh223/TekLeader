@@ -22,6 +22,7 @@ import {
   TableCell,
   TableRow,
   Paper,
+  Button,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { leaderboardApi, ManagerEntry } from '../api/client';
@@ -36,7 +37,9 @@ import {
   People as PeopleIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
+  PictureAsPdf as PdfIcon,
 } from '@mui/icons-material';
+import { exportLeaderboardToPDF } from '../utils/pdfExportUtils';
 
 const badgeIcons: Record<string, any> = {
   trophy: TrophyIcon,
@@ -118,14 +121,14 @@ export default function UserDashboard() {
     setError(null);
 
     try {
-      const data = await leaderboardApi.getLeaderboard({
-        month: selectedMonth,
+      const data = await leaderboardApi.getLeaderboard(
+        selectedMonth,
         functionalHead,
         band,
         search,
-        page: 0,
-        size: 100,
-      });
+        0,
+        100
+      );
       setManagers(data.managers);
       setStatistics(data.statistics);
     } catch (err) {
@@ -157,9 +160,30 @@ export default function UserDashboard() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#00897B', mb: 3 }}>
-        🏆 Leaderboard
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: '#00897B' }}>
+          🏆 Leaderboard
+        </Typography>
+        {managers.length > 0 && !loading && (
+          <Button
+            variant="contained"
+            startIcon={<PdfIcon />}
+            onClick={() => exportLeaderboardToPDF(managers, selectedMonth, functionalHead, band)}
+            sx={{
+              bgcolor: '#D32F2F',
+              '&:hover': { bgcolor: '#B71C1C' },
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1,
+              boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)',
+            }}
+          >
+            Export as PDF
+          </Button>
+        )}
+      </Box>
 
       <Grid container spacing={2} sx={{ mb: 4 }}>
         <Grid item xs={12} md={3}>
