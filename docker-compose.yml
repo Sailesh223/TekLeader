@@ -1,0 +1,64 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: tekleader-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: tekleader
+      MONGO_INITDB_ROOT_PASSWORD: tekleader123
+      MONGO_INITDB_DATABASE: tekleader
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - tekleader-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tekleader-backend
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://tekleader:tekleader123@mongodb:27017/tekleader?authSource=admin
+      SPRING_DATA_MONGODB_DATABASE: tekleader
+    ports:
+      - "8081:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - tekleader-network
+    volumes:
+      - ./backend:/app
+      - maven_cache:/root/.m2
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tekleader-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8081/api
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - tekleader-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+networks:
+  tekleader-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  maven_cache:
+
