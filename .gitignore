@@ -1,0 +1,7 @@
+frontend/node_modules/
+backend/target/
+backend/.mvn/
+backend/.idea/
+backend/.DS_Store
+backend/*.iml
+.DS_Store
