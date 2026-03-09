@@ -23,6 +23,8 @@ import {
   Business as BusinessIcon,
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
+  AccountTree as HierarchyIcon,
+  EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 260;
@@ -31,6 +33,8 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
+  const isDirectorPath = location.pathname.startsWith('/director');
+  const isFunctionalHeadPath = location.pathname.startsWith('/functional-head');
 
   const handleLogout = () => {
     navigate('/login');
@@ -49,7 +53,23 @@ export default function Layout() {
     { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
   ];
 
-  const menuItems = isAdminPath ? adminMenuItems : userMenuItems;
+  const directorMenuItems = [
+    { text: 'My Team', icon: <HierarchyIcon />, path: '/director' },
+    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/director/leaderboard' },
+  ];
+
+  const functionalHeadMenuItems = [
+    { text: 'Organization', icon: <HierarchyIcon />, path: '/functional-head' },
+    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/functional-head/leaderboard' },
+  ];
+
+  const menuItems = isAdminPath
+    ? adminMenuItems
+    : isDirectorPath
+    ? directorMenuItems
+    : isFunctionalHeadPath
+    ? functionalHeadMenuItems
+    : userMenuItems;
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>

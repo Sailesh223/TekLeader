@@ -84,7 +84,11 @@ public class ExcelImportService {
                     }
 
                     managerAggregations
-                        .computeIfAbsent(empData.managerName, k -> new ManagerAggregation(empData.managerName, empData.functionalHead))
+                        .computeIfAbsent(empData.managerName, k -> new ManagerAggregation(
+                            empData.managerName,
+                            empData.managerEmail,
+                            empData.directorName,
+                            empData.functionalHead))
                         .addEmployee(empData);
 
                 } catch (Exception e) {
@@ -100,7 +104,7 @@ public class ExcelImportService {
             //Assert
             for (ManagerAggregation agg : managerAggregations.values()) {
                 try {
-                    Manager manager = getOrCreateManager(agg.managerName);
+                    Manager manager = getOrCreateManager(agg.managerName, agg.managerEmail, agg.directorName, agg.functionalHead);
 
                     Optional<MonthlyMetric> existing = monthlyMetricRepository
                         .findByManagerIdAndMonth(manager.getId(), month);
@@ -207,12 +211,13 @@ public class ExcelImportService {
         EmployeeData data = new EmployeeData();
 
         data.managerName = getCellValueAsString(row, columnMap.get("Manager Name"));
+        data.managerEmail = getCellValueAsString(row, columnMap.get("Manager Email"));
         data.functionalHead = getCellValueAsString(row, columnMap.get("Functional Head Name"));
+        data.directorName = getCellValueAsString(row, columnMap.get("Director Name"));
         data.preferredFullName = getCellValueAsString(row, columnMap.get("Preferred full name"));
         data.preferredFirstName = getCellValueAsString(row, columnMap.get("Preferred first name"));
         data.preferredLastName = getCellValueAsString(row, columnMap.get("Preferred last name"));
         data.department = getCellValueAsString(row, columnMap.get("Department"));
-        data.directorName = getCellValueAsString(row, columnMap.get("Director Name"));
         data.hrbp = getCellValueAsString(row, columnMap.get("HRBP"));
 
         Integer participatedCol = columnMap.get("1:1s Participated with Manager Final");
@@ -259,16 +264,41 @@ public class ExcelImportService {
         return parsed.setScale(2, RoundingMode.HALF_UP);
     }
 
-    private Manager getOrCreateManager(String name) {
+    private Manager getOrCreateManager(String name, String email, String directorName, String functionalHead) {
         String canonical = name.toLowerCase().trim().replaceAll("\\s+", " ");
 
-        return managerRepository.findByCanonicalName(canonical)
-            .orElseGet(() -> {
-                Manager manager = new Manager();
-                manager.setDisplayName(name);
-                manager.setCanonicalName(canonical);
+        Optional<Manager> existing = managerRepository.findByCanonicalName(canonical);
+
+        if (existing.isPresent()) {
+            Manager manager = existing.get();
+            boolean updated = false;
+
+            if (email != null && !email.isEmpty() && !email.equals(manager.getEmail())) {
+                manager.setEmail(email);
+                updated = true;
+            }
+            if (directorName != null && !directorName.isEmpty() && !directorName.equals(manager.getDirectorName())) {
+                manager.setDirectorName(directorName);
+                updated = true;
+            }
+            if (functionalHead != null && !functionalHead.isEmpty() && !functionalHead.equals(manager.getFunctionalHead())) {
+                manager.setFunctionalHead(functionalHead);
+                updated = true;
+            }
+
+            if (updated) {
                 return managerRepository.save(manager);
-            });
+            }
+            return manager;
+        }
+
+        Manager manager = new Manager();
+        manager.setDisplayName(name);
+        manager.setCanonicalName(canonical);
+        manager.setEmail(email);
+        manager.setDirectorName(directorName);
+        manager.setFunctionalHead(functionalHead);
+        return managerRepository.save(manager);
     }
 
     private MonthlyMetric createOrUpdateMetric(
@@ -278,15 +308,16 @@ public class ExcelImportService {
         ManagerAggregation agg,
         FormulaConfig formula
     ) {
-        BigDecimal previousUtilization = scoringService
-            .getPreviousMonthUtilization(manager.getId(), month);
-
         BigDecimal teamSizeScore = scoringService.calculateTeamSizeScore(
             agg.headcount, formula.getTeamSizeMapping()
         );
 
-        BigDecimal consistencyScore = scoringService.calculateConsistencyScore(
-            agg.utilization, previousUtilization, formula.getConsistencyPenaltyMultiplier()
+        BigDecimal consistencyScore = scoringService.calculateMultiMonthConsistencyScore(
+            manager.getId(),
+            month,
+            agg.utilization,
+            formula.getConsistencyPenaltyMultiplier(),
+            formula.getConsistencyMonthsToConsider()
         );
 
         BigDecimal finalScore = scoringService.calculateFinalScore(
@@ -418,19 +449,22 @@ public class ExcelImportService {
 
     private static class EmployeeData {
         String managerName;
+        String managerEmail;
         String functionalHead;
+        String directorName;
         int participated;
         String preferredFullName;
         String preferredFirstName;
         String preferredLastName;
         String department;
-        String directorName;
         String hrbp;
         int oneOnOnesSetUp;
     }
 
     private static class ManagerAggregation {
         String managerName;
+        String managerEmail;
+        String directorName;
         String functionalHead;
         int headcount = 0;
         int oneOnOnes = 0;
@@ -438,8 +472,10 @@ public class ExcelImportService {
         BigDecimal utilization = BigDecimal.ZERO;
         List<EmployeeData> employees = new ArrayList<>();
 
-        ManagerAggregation(String managerName, String functionalHead) {
+        ManagerAggregation(String managerName, String managerEmail, String directorName, String functionalHead) {
             this.managerName = managerName;
+            this.managerEmail = managerEmail;
+            this.directorName = directorName;
             this.functionalHead = functionalHead;
         }
 

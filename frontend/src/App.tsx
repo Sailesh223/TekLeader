@@ -10,6 +10,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import UploadPage from './pages/UploadPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
+import DirectorDashboard from './pages/DirectorDashboard';
+import FunctionalHeadDashboard from './pages/FunctionalHeadDashboard';
 
 function App() {
   return (
@@ -29,6 +31,14 @@ function App() {
             <Route path="leaderboard" element={<UserDashboard />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+          </Route>
+          <Route path="/director" element={<Layout />}>
+            <Route index element={<DirectorDashboard />} />
+            <Route path="leaderboard" element={<UserDashboard />} />
+          </Route>
+          <Route path="/functional-head" element={<Layout />}>
+            <Route index element={<FunctionalHeadDashboard />} />
+            <Route path="leaderboard" element={<UserDashboard />} />
           </Route>
         </Routes>
       </Router>

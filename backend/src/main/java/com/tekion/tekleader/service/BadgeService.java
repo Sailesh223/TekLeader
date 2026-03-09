@@ -181,7 +181,43 @@ public class BadgeService {
         
         return String.format("%04d-%02d", year, monthNum);
     }
-    
+
+    @Transactional
+    public BadgeAward awardManualBadge(String managerId, String badgeCode, String month, String awardedBy, String reason) {
+        BadgeDefinition badge = badgeDefinitionRepository.findByCode(badgeCode)
+            .orElseThrow(() -> new RuntimeException("Badge not found: " + badgeCode));
+
+        Optional<BadgeAward> existing = badgeAwardRepository
+            .findByManagerIdAndBadgeDefinitionIdAndMonth(managerId, badge.getId(), month);
+
+        if (existing.isPresent()) {
+            throw new RuntimeException("Badge already awarded to this manager for this month");
+        }
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("awardedBy", awardedBy);
+        metadata.put("reason", reason);
+        metadata.put("manual", true);
+
+        BadgeAward award = BadgeAward.builder()
+            .managerId(managerId)
+            .badgeDefinitionId(badge.getId())
+            .month(month)
+            .metadata(metadata)
+            .build();
+
+        BadgeAward saved = badgeAwardRepository.save(award);
+        log.info("Manual badge {} awarded to manager {} by {} for month {}", badgeCode, managerId, awardedBy, month);
+
+        return saved;
+    }
+
+    public List<BadgeDefinition> getAllActiveBadges() {
+        return badgeDefinitionRepository.findAll().stream()
+            .filter(BadgeDefinition::getActive)
+            .collect(Collectors.toList());
+    }
+
     private record ImprovementRecord(MonthlyMetric current, MonthlyMetric previous, BigDecimal delta) {}
 }
 

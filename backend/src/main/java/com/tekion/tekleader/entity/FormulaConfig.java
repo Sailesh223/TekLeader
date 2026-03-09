@@ -38,6 +38,8 @@ public class FormulaConfig {
 
     private BigDecimal consistencyPenaltyMultiplier;
 
+    private Integer consistencyMonthsToConsider = 2;
+
     private Boolean active = false;
 
     @CreatedDate
