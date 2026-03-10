@@ -91,6 +91,8 @@ export default function UserDashboard() {
   const [search, setSearch] = useState('');
   const [expandedManager, setExpandedManager] = useState<string | null>(null);
   const [statistics, setStatistics] = useState<any>(null);
+  const [achieversModalOpen, setAchieversModalOpen] = useState(false);
+  const [selectedBand, setSelectedBand] = useState<string | null>(null);
 
   useEffect(() => {
     loadAvailableMonths();
@@ -156,6 +158,18 @@ export default function UserDashboard() {
 
   const toggleExpand = (managerId: string) => {
     setExpandedManager(expandedManager === managerId ? null : managerId);
+  };
+
+  const handleOpenAchieversModal = (bandName: string) => {
+    setSelectedBand(bandName);
+    setBand(bandName);
+    setAchieversModalOpen(true);
+  };
+
+  const handleCloseAchieversModal = () => {
+    setAchieversModalOpen(false);
+    setSelectedBand(null);
+    setBand('all');
   };
 
   return (
@@ -323,29 +337,6 @@ export default function UserDashboard() {
             </GamifiedCard>
           </Grid>
           <Grid item xs={12} md={3}>
-            <GamifiedCard delay={0.2}>
-              <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: -20,
-                    right: -20,
-                    width: 100,
-                    height: 100,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%)',
-                  }}
-                />
-                <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
-                  Average Score
-                </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#FFD700' }}>
-                  {statistics.averageFinalScore?.toFixed(1) || '0.0'}
-                </Typography>
-              </CardContent>
-            </GamifiedCard>
-          </Grid>
-          <Grid item xs={12} md={3}>
             <GamifiedCard delay={0.3}>
               <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
                 <Box
@@ -369,7 +360,11 @@ export default function UserDashboard() {
             </GamifiedCard>
           </Grid>
           <Grid item xs={12} md={3}>
-            <GamifiedCard delay={0.4}>
+            <GamifiedCard
+              delay={0.4}
+              onClick={() => handleOpenAchieversModal('Gold')}
+              sx={{ cursor: 'pointer', '&:hover': { transform: 'translateY(-8px)' } }}
+            >
               <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
                 <Box
                   sx={{
@@ -387,6 +382,33 @@ export default function UserDashboard() {
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#FFD700' }}>
                   {statistics.bandDistribution?.Gold || 0}
+                </Typography>
+              </CardContent>
+            </GamifiedCard>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <GamifiedCard
+              delay={0.5}
+              onClick={() => handleOpenAchieversModal('Silver')}
+              sx={{ cursor: 'pointer', '&:hover': { transform: 'translateY(-8px)' } }}
+            >
+              <CardContent sx={{ position: 'relative', overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -20,
+                    right: -20,
+                    width: 100,
+                    height: 100,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(192, 192, 192, 0.2) 0%, transparent 70%)',
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
+                  🥈 Silver Achievers
+                </Typography>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: '#C0C0C0' }}>
+                  {statistics.bandDistribution?.Silver || 0}
                 </Typography>
               </CardContent>
             </GamifiedCard>

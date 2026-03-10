@@ -74,6 +74,7 @@ public class DataInitializer implements CommandLineRunner {
                 .teamSizeMapping(teamSizeMapping)
                 .classificationThresholds(classificationThresholds)
                 .consistencyPenaltyMultiplier(new BigDecimal("2.0"))
+                .consistencyMonthsToConsider(3)
                 .active(true)
                 .createdBy("system")
                 .build();

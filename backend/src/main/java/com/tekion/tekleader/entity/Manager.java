@@ -31,6 +31,12 @@ public class Manager {
 
     private String avatarUrl;
 
+    private String role;
+
+    private String directorName;
+
+    private String functionalHead;
+
     @CreatedDate
     private LocalDateTime createdAt;
 

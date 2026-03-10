@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -42,11 +44,59 @@ public class ScoringService {
         if (previousUtilization == null) {
             return BigDecimal.valueOf(50.0);
         }
-        
+
         BigDecimal delta = currentUtilization.subtract(previousUtilization).abs();
         BigDecimal penalty = penaltyMultiplier.multiply(delta);
         BigDecimal rawScore = BigDecimal.valueOf(100.0).subtract(penalty);
-        
+
+        return rawScore.max(BigDecimal.ZERO).min(BigDecimal.valueOf(100.0))
+            .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal calculateMultiMonthConsistencyScore(
+        String managerId,
+        String currentMonth,
+        BigDecimal currentUtilization,
+        BigDecimal penaltyMultiplier,
+        Integer monthsToConsider
+    ) {
+        if (monthsToConsider == null || monthsToConsider < 2) {
+            monthsToConsider = 2;
+        }
+
+        List<BigDecimal> utilizationHistory = new ArrayList<>();
+        utilizationHistory.add(currentUtilization);
+
+        String month = currentMonth;
+        for (int i = 1; i < monthsToConsider; i++) {
+            month = getPreviousMonth(month);
+            Optional<MonthlyMetric> metric = monthlyMetricRepository
+                .findByManagerIdAndMonth(managerId, month);
+
+            if (metric.isPresent()) {
+                utilizationHistory.add(metric.get().getUtilization());
+            } else {
+                break;
+            }
+        }
+
+        if (utilizationHistory.size() < 2) {
+            return BigDecimal.valueOf(50.0);
+        }
+
+        BigDecimal totalPenalty = BigDecimal.ZERO;
+        int comparisons = 0;
+
+        for (int i = 0; i < utilizationHistory.size() - 1; i++) {
+            BigDecimal delta = utilizationHistory.get(i).subtract(utilizationHistory.get(i + 1)).abs();
+            totalPenalty = totalPenalty.add(delta);
+            comparisons++;
+        }
+
+        BigDecimal avgDelta = totalPenalty.divide(BigDecimal.valueOf(comparisons), 2, RoundingMode.HALF_UP);
+        BigDecimal penalty = penaltyMultiplier.multiply(avgDelta);
+        BigDecimal rawScore = BigDecimal.valueOf(100.0).subtract(penalty);
+
         return rawScore.max(BigDecimal.ZERO).min(BigDecimal.valueOf(100.0))
             .setScale(2, RoundingMode.HALF_UP);
     }
