@@ -25,13 +25,17 @@ import {
   Settings as SettingsIcon,
   AccountTree as HierarchyIcon,
   EmojiEvents as TrophyIcon,
+  CalendarMonth as SeasonalIcon,
+  Whatshot as OverallIcon,
 } from '@mui/icons-material';
+import { useStore } from '../store/useStore';
 
 const DRAWER_WIDTH = 260;
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userInfo } = useStore();
   const isAdminPath = location.pathname.startsWith('/admin');
   const isDirectorPath = location.pathname.startsWith('/director');
   const isFunctionalHeadPath = location.pathname.startsWith('/functional-head');
@@ -41,26 +45,34 @@ export default function Layout() {
   };
 
   const userMenuItems = [
-    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/user/leaderboard' },
     { text: 'My Dashboard', icon: <AnalyticsIcon />, path: '/user' },
+    { text: 'Monthly', icon: <LeaderboardIcon />, path: '/user/leaderboard' },
+    { text: 'Seasonal', icon: <SeasonalIcon />, path: '/user/seasonal' },
+    { text: 'Overall', icon: <OverallIcon />, path: '/user/overall' },
   ];
 
   const adminMenuItems = [
     { text: 'Dashboard', icon: <AdminIcon />, path: '/admin' },
     { text: 'Upload Data', icon: <UploadIcon />, path: '/admin/upload' },
-    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/admin/leaderboard' },
+    { text: 'Monthly', icon: <LeaderboardIcon />, path: '/admin/leaderboard' },
+    { text: 'Seasonal', icon: <SeasonalIcon />, path: '/admin/seasonal' },
+    { text: 'Overall', icon: <OverallIcon />, path: '/admin/overall' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/admin/analytics' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
   ];
 
   const directorMenuItems = [
     { text: 'My Team', icon: <HierarchyIcon />, path: '/director' },
-    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/director/leaderboard' },
+    { text: 'Monthly', icon: <LeaderboardIcon />, path: '/director/leaderboard' },
+    { text: 'Seasonal', icon: <SeasonalIcon />, path: '/director/seasonal' },
+    { text: 'Overall', icon: <OverallIcon />, path: '/director/overall' },
   ];
 
   const functionalHeadMenuItems = [
     { text: 'Organization', icon: <HierarchyIcon />, path: '/functional-head' },
-    { text: 'Leaderboard', icon: <LeaderboardIcon />, path: '/functional-head/leaderboard' },
+    { text: 'Monthly', icon: <LeaderboardIcon />, path: '/functional-head/leaderboard' },
+    { text: 'Seasonal', icon: <SeasonalIcon />, path: '/functional-head/seasonal' },
+    { text: 'Overall', icon: <OverallIcon />, path: '/functional-head/overall' },
   ];
 
   const menuItems = isAdminPath
@@ -119,13 +131,13 @@ export default function Layout() {
                 fontSize: '1.5rem',
               }}
             >
-              {isAdminPath ? 'A' : 'U'}
+              {userInfo?.displayName?.charAt(0).toUpperCase() || (isAdminPath ? 'A' : 'U')}
             </Avatar>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {isAdminPath ? 'Admin User' : 'User'}
+              {userInfo?.displayName || (isAdminPath ? 'Admin User' : 'User')}
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.8 }}>
-              {isAdminPath ? 'jithu@gmail.com' : 'SSO User'}
+              {userInfo?.email || (isAdminPath ? 'jithu@gmail.com' : 'SSO User')}
             </Typography>
           </Box>
         </Box>

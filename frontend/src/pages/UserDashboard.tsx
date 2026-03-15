@@ -82,7 +82,7 @@ const GamifiedCard = ({ children, delay = 0, ...props }: any) => (
 );
 
 export default function UserDashboard() {
-  const { selectedMonth, availableMonths, setSelectedMonth, setAvailableMonths } = useStore();
+  const { selectedMonth, availableMonths, setSelectedMonth, setAvailableMonths, userInfo } = useStore();
   const [managers, setManagers] = useState<ManagerEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +93,7 @@ export default function UserDashboard() {
   const [statistics, setStatistics] = useState<any>(null);
   const [achieversModalOpen, setAchieversModalOpen] = useState(false);
   const [selectedBand, setSelectedBand] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     loadAvailableMonths();
@@ -171,6 +172,38 @@ export default function UserDashboard() {
     setSelectedBand(null);
     setBand('all');
   };
+
+  // Get managers to display: top 10 + current user if not in top 10
+  const getDisplayedManagers = () => {
+    // ALWAYS sort by rank first to ensure correct order
+    const sortedManagers = [...managers].sort((a, b) => a.rank - b.rank);
+
+    if (showAll || search || functionalHead !== 'all' || band !== 'all') {
+      return sortedManagers;
+    }
+
+    const topTen = sortedManagers.slice(0, 10);
+
+    if (!userInfo) {
+      return topTen;
+    }
+
+    // Find current user in the list
+    const currentUserIndex = sortedManagers.findIndex(
+      m => m.manager.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
+           m.manager.email.toLowerCase() === userInfo.email.toLowerCase()
+    );
+
+    // If user is not in top 10 and exists in the list, add them
+    if (currentUserIndex >= 10) {
+      return [...topTen, sortedManagers[currentUserIndex]];
+    }
+
+    return topTen;
+  };
+
+  const displayedManagers = getDisplayedManagers();
+  const hasMore = managers.length > 10 && !showAll && !search && functionalHead === 'all' && band === 'all';
 
   return (
     <Box>
@@ -428,8 +461,16 @@ export default function UserDashboard() {
 
       <AnimatePresence>
         {!loading && managers.length > 0 && (
-          <Grid container spacing={2}>
-            {managers.map((manager, index) => (
+          <>
+            <Grid container spacing={2}>
+              {displayedManagers.map((manager, index) => {
+                const isCurrentUser = userInfo && (
+                  manager.manager.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
+                  manager.manager.email.toLowerCase() === userInfo.email.toLowerCase()
+                );
+                const isOutsideTopTen = manager.rank > 10 && isCurrentUser;
+
+                return (
               <Grid item xs={12} key={manager.manager.id}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -437,16 +478,29 @@ export default function UserDashboard() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
+                  {isOutsideTopTen && (
+                    <Box sx={{ my: 2, textAlign: 'center' }}>
+                      <Typography variant="body2" sx={{ color: '#7F8C8D', fontStyle: 'italic' }}>
+                        ... {manager.rank - 11} more managers ...
+                      </Typography>
+                    </Box>
+                  )}
                   <Card
                     sx={{
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(178, 223, 219, 0.2) 100%)',
+                      background: isCurrentUser
+                        ? 'linear-gradient(135deg, rgba(0, 191, 165, 0.15) 0%, rgba(178, 223, 219, 0.3) 100%)'
+                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(178, 223, 219, 0.2) 100%)',
                       backdropFilter: 'blur(20px)',
-                      border: '2px solid rgba(0, 191, 165, 0.3)',
+                      border: isCurrentUser
+                        ? '3px solid #00BFA5'
+                        : '2px solid rgba(0, 191, 165, 0.3)',
                       borderRadius: 3,
                       position: 'relative',
                       overflow: 'hidden',
                       transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 20px rgba(0, 191, 165, 0.1)',
+                      boxShadow: isCurrentUser
+                        ? '0 8px 32px rgba(0, 191, 165, 0.3)'
+                        : '0 4px 20px rgba(0, 191, 165, 0.1)',
                       '&::before': {
                         content: '""',
                         position: 'absolute',
@@ -727,8 +781,34 @@ export default function UserDashboard() {
                   </Card>
                 </motion.div>
               </Grid>
-            ))}
-          </Grid>
+            );
+              })}
+            </Grid>
+
+            {hasMore && (
+              <Box sx={{ mt: 3, textAlign: 'center' }}>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() => setShowAll(true)}
+                  sx={{
+                    borderColor: '#00BFA5',
+                    color: '#00BFA5',
+                    fontWeight: 600,
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 2,
+                    '&:hover': {
+                      borderColor: '#00897B',
+                      bgcolor: 'rgba(0, 191, 165, 0.1)',
+                    },
+                  }}
+                >
+                  Show All {managers.length} Managers
+                </Button>
+              </Box>
+            )}
+          </>
         )}
       </AnimatePresence>
     </Box>

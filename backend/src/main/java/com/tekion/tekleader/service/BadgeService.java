@@ -42,55 +42,53 @@ public class BadgeService {
     }
     
     private void awardOneOnOneChampion(MonthlyMetric currentMetric) {
-        String previousMonth = getPreviousMonth(currentMetric.getMonth());
-        Optional<MonthlyMetric> prevMetric = monthlyMetricRepository
-            .findByManagerIdAndMonth(currentMetric.getManagerId(), previousMonth);
-
-        if (prevMetric.isPresent() &&
-            prevMetric.get().getUtilization().compareTo(BigDecimal.valueOf(100)) == 0) {
-
+        // Criteria: final score >= 90
+        if (currentMetric.getFinalScore().compareTo(BigDecimal.valueOf(90)) >= 0) {
             BadgeDefinition badge = badgeDefinitionRepository.findByCode("ONE_ON_ONE_CHAMPION")
                 .orElseThrow();
 
             Map<String, Object> metadata = new HashMap<>();
-            metadata.put("previousMonthUtilization", 100.0);
-            metadata.put("previousMonth", previousMonth);
+            metadata.put("finalScore", currentMetric.getFinalScore().doubleValue());
 
             awardBadge(currentMetric.getManagerId(), badge, currentMetric.getMonth(), metadata);
         }
     }
     
     private void awardStreakStar(MonthlyMetric currentMetric) {
-        int streakLength = calculateStreak(currentMetric.getManagerId(), currentMetric.getMonth());
+        // Criteria: N month streak with final score > 80
+        int streakLength = calculateStreakByFinalScore(currentMetric.getManagerId(), currentMetric.getMonth());
 
-        if (streakLength >= 2) {
+        if (streakLength >= 2 && currentMetric.getFinalScore().compareTo(BigDecimal.valueOf(80)) > 0) {
             BadgeDefinition badge = badgeDefinitionRepository.findByCode("STREAK_STAR")
                 .orElseThrow();
 
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("streakLength", streakLength);
             metadata.put("currentStreak", true);
+            metadata.put("currentFinalScore", currentMetric.getFinalScore().doubleValue());
 
             awardBadge(currentMetric.getManagerId(), badge, currentMetric.getMonth(), metadata);
         }
     }
     
     private void awardHeavyLifter(MonthlyMetric metric) {
-        if (metric.getHeadcount() >= 7 &&
-            metric.getUtilization().compareTo(BigDecimal.valueOf(80)) > 0) {
+        // Criteria: team size >= 5 AND final score >= 80
+        if (metric.getHeadcount() >= 5 &&
+            metric.getFinalScore().compareTo(BigDecimal.valueOf(80)) >= 0) {
 
             BadgeDefinition badge = badgeDefinitionRepository.findByCode("HEAVY_LIFTER")
                 .orElseThrow();
 
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("headcount", metric.getHeadcount());
-            metadata.put("utilization", metric.getUtilization().doubleValue());
+            metadata.put("finalScore", metric.getFinalScore().doubleValue());
 
             awardBadge(metric.getManagerId(), badge, metric.getMonth(), metadata);
         }
     }
     
     private void awardMostImproved(String month, List<MonthlyMetric> currentMetrics) {
+        // Criteria: final score prev >= 30, current score >= 60, highest improvement
         String previousMonth = getPreviousMonth(month);
 
         MonthlyMetric mostImproved = currentMetrics.stream()
@@ -100,14 +98,20 @@ public class BadgeService {
 
                 if (prev.isEmpty()) return null;
 
-                BigDecimal delta = current.getUtilization().subtract(prev.get().getUtilization());
+                // Filter: previous score >= 30 AND current score >= 60
+                if (prev.get().getFinalScore().compareTo(BigDecimal.valueOf(30)) < 0 ||
+                    current.getFinalScore().compareTo(BigDecimal.valueOf(60)) < 0) {
+                    return null;
+                }
+
+                BigDecimal delta = current.getFinalScore().subtract(prev.get().getFinalScore());
                 return new ImprovementRecord(current, prev.get(), delta);
             })
             .filter(Objects::nonNull)
             .filter(r -> r.delta.compareTo(BigDecimal.ZERO) > 0)
             .max(Comparator
                 .comparing((ImprovementRecord r) -> r.delta)
-                .thenComparing(r -> r.current.getUtilization())
+                .thenComparing(r -> r.current.getFinalScore())
             )
             .map(r -> r.current)
             .orElse(null);
@@ -120,10 +124,10 @@ public class BadgeService {
                 .findByManagerIdAndMonth(mostImproved.getManagerId(), previousMonth);
 
             Map<String, Object> metadata = new HashMap<>();
-            metadata.put("delta", mostImproved.getUtilization()
-                .subtract(prev.get().getUtilization()).doubleValue());
-            metadata.put("previousUtilization", prev.get().getUtilization().doubleValue());
-            metadata.put("currentUtilization", mostImproved.getUtilization().doubleValue());
+            metadata.put("delta", mostImproved.getFinalScore()
+                .subtract(prev.get().getFinalScore()).doubleValue());
+            metadata.put("previousScore", prev.get().getFinalScore().doubleValue());
+            metadata.put("currentScore", mostImproved.getFinalScore().doubleValue());
             metadata.put("previousMonth", previousMonth);
 
             awardBadge(mostImproved.getManagerId(), badge, month, metadata);
@@ -158,6 +162,26 @@ public class BadgeService {
 
             if (metric.isEmpty() ||
                 metric.get().getUtilization().compareTo(BigDecimal.valueOf(80)) <= 0) {
+                break;
+            }
+
+            streak++;
+            month = getPreviousMonth(month);
+        }
+
+        return streak;
+    }
+
+    private int calculateStreakByFinalScore(String managerId, String currentMonth) {
+        int streak = 0;
+        String month = currentMonth;
+
+        while (true) {
+            Optional<MonthlyMetric> metric = monthlyMetricRepository
+                .findByManagerIdAndMonth(managerId, month);
+
+            if (metric.isEmpty() ||
+                metric.get().getFinalScore().compareTo(BigDecimal.valueOf(80)) <= 0) {
                 break;
             }
 
