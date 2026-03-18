@@ -27,6 +27,7 @@ import {
 import { motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { bandColors } from '../theme';
+import UserAvatar from '../components/UserAvatar';
 
 const MotionCard = motion(Card);
 
@@ -183,9 +184,16 @@ export default function DirectorDashboard() {
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                <Avatar src={manager.avatarUrl || undefined} sx={{ bgcolor: getBandColor(manager.classificationBand) }}>
-                  {manager.displayName.charAt(0)}
-                </Avatar>
+                <UserAvatar
+                  name={manager.displayName}
+                  email={manager.email}
+                  customAvatarUrl={manager.avatarUrl}
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    border: `3px solid ${getBandColor(manager.classificationBand)}`,
+                  }}
+                />
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {manager.displayName}

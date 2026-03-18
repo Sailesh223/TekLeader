@@ -214,15 +214,34 @@ public class ExcelImportService {
     private EmployeeData parseEmployeeRow(Row row, Map<String, Integer> columnMap) {
         EmployeeData data = new EmployeeData();
 
-        data.managerName = getCellValueAsString(row, columnMap.get("Manager Name"));
-        data.managerEmail = getCellValueAsString(row, columnMap.get("Manager Email"));
-        data.functionalHead = getCellValueAsString(row, columnMap.get("Functional Head Name"));
-        data.directorName = getCellValueAsString(row, columnMap.get("Director Name"));
-        data.preferredFullName = getCellValueAsString(row, columnMap.get("Preferred full name"));
-        data.preferredFirstName = getCellValueAsString(row, columnMap.get("Preferred first name"));
-        data.preferredLastName = getCellValueAsString(row, columnMap.get("Preferred last name"));
-        data.department = getCellValueAsString(row, columnMap.get("Department"));
-        data.hrbp = getCellValueAsString(row, columnMap.get("HRBP"));
+        // Required columns
+        Integer managerNameCol = columnMap.get("Manager Name");
+        data.managerName = managerNameCol != null ? getCellValueAsString(row, managerNameCol) : "";
+
+        Integer functionalHeadCol = columnMap.get("Functional Head Name");
+        data.functionalHead = functionalHeadCol != null ? getCellValueAsString(row, functionalHeadCol) : "";
+
+        // Optional columns - handle null safely
+        Integer managerEmailCol = columnMap.get("Manager Email");
+        data.managerEmail = managerEmailCol != null ? getCellValueAsString(row, managerEmailCol) : "";
+
+        Integer directorNameCol = columnMap.get("Director Name");
+        data.directorName = directorNameCol != null ? getCellValueAsString(row, directorNameCol) : "";
+
+        Integer preferredFullNameCol = columnMap.get("Preferred full name");
+        data.preferredFullName = preferredFullNameCol != null ? getCellValueAsString(row, preferredFullNameCol) : "";
+
+        Integer preferredFirstNameCol = columnMap.get("Preferred first name");
+        data.preferredFirstName = preferredFirstNameCol != null ? getCellValueAsString(row, preferredFirstNameCol) : "";
+
+        Integer preferredLastNameCol = columnMap.get("Preferred last name");
+        data.preferredLastName = preferredLastNameCol != null ? getCellValueAsString(row, preferredLastNameCol) : "";
+
+        Integer departmentCol = columnMap.get("Department");
+        data.department = departmentCol != null ? getCellValueAsString(row, departmentCol) : "";
+
+        Integer hrbpCol = columnMap.get("HRBP");
+        data.hrbp = hrbpCol != null ? getCellValueAsString(row, hrbpCol) : "";
 
         Integer participatedCol = columnMap.get("1:1s Participated with Manager Final");
         data.participated = participatedCol != null ? getCellValueAsInt(row, participatedCol) : 0;

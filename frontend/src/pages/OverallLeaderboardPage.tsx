@@ -2,25 +2,14 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  Avatar,
-  Chip,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Alert,
-  LinearProgress,
-  Button,
+  Container,
 } from '@mui/material';
-import { EmojiEvents, Whatshot, TrendingUp } from '@mui/icons-material';
 import { leaderboardApi } from '../api/client';
 import { useStore } from '../store/useStore';
+import LeaderboardPodium from '../components/leaderboard/LeaderboardPodium';
+import LeaderboardListCard from '../components/leaderboard/LeaderboardListCard';
 
 interface OverallEntry {
   managerId: string;
@@ -97,6 +86,20 @@ export default function OverallLeaderboardPage() {
     }
   };
 
+  const getBandColor = (band: string) => {
+    if (band === 'Gold') return '#FFD700';
+    if (band === 'Silver') return '#A0D0E0';
+    if (band === 'Bronze') return '#CD7F32';
+    return '#95A5A6';
+  };
+
+  const getClassificationBand = (entry: OverallEntry): string => {
+    if (entry.goldCount > 0) return 'Gold';
+    if (entry.silverCount > 0) return 'Silver';
+    if (entry.bronzeCount > 0) return 'Bronze';
+    return 'Unranked';
+  };
+
   const getRankMedal = (rank: number) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
@@ -141,13 +144,53 @@ export default function OverallLeaderboardPage() {
     );
   }
 
+  // Prepare data for podium (top 3)
+  const topThree = leaderboard.slice(0, 3).map((entry, index) => {
+    const isCurrentUser = userInfo && (
+      entry.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
+      entry.email.toLowerCase() === userInfo.email.toLowerCase()
+    );
+    const band = getClassificationBand(entry);
+
+    return {
+      name: entry.displayName,
+      email: entry.email,
+      score: entry.overallXP,
+      badge: band !== 'Unranked' ? band : undefined,
+      isCurrentUser,
+    };
+  });
+
+  // Prepare data for list (rank 4+)
+  const remainingEntries = (showAll ? leaderboard : leaderboard.slice(0, 20))
+    .slice(3)
+    .map((entry, index) => {
+      const rank = index + 4;
+      const isCurrentUser = userInfo && (
+        entry.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
+        entry.email.toLowerCase() === userInfo.email.toLowerCase()
+      );
+      const band = getClassificationBand(entry);
+
+      return {
+        rank,
+        name: entry.displayName,
+        email: entry.email,
+        score: entry.overallXP,
+        badge: band !== 'Unranked' ? band : undefined,
+        badgeColor: getBandColor(band),
+        isCurrentUser,
+      };
+    });
+
   return (
-    <Box sx={{ p: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, color: '#2C3E50', mb: 1 }}>
+        <Typography variant="h3" sx={{ fontWeight: 800, color: '#2C3E50', mb: 1 }}>
           👑 Overall Leaderboard
         </Typography>
-        <Typography variant="h6" sx={{ color: '#7F8C8D' }}>
+        <Typography variant="h6" sx={{ color: '#7F8C8D', fontWeight: 400 }}>
           All-Time Champions
         </Typography>
       </Box>
@@ -158,155 +201,25 @@ export default function OverallLeaderboardPage() {
         </Alert>
       )}
 
-      <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-        <CardContent>
-          <TableContainer component={Paper} elevation={0}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#F8F9FA' }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Rank</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Manager</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Overall XP</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Level</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Streak</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Avg Score</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Badges</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {displayedEntries.map((entry, displayIndex) => {
-                  const actualRank = leaderboard.findIndex(e => e.managerId === entry.managerId) + 1;
-                  const isCurrentUser = userInfo && (
-                    entry.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
-                    entry.email.toLowerCase() === userInfo.email.toLowerCase()
-                  );
-                  const isOutsideTopTen = actualRank > 10 && isCurrentUser;
+      {/* Top 3 Podium */}
+      {topThree.length > 0 && (
+        <LeaderboardPodium
+          topThree={topThree}
+          scoreLabel="Overall XP"
+          title="🏆 Top Performers"
+        />
+      )}
 
-                  return (
-                    <>
-                      {isOutsideTopTen && (
-                        <TableRow>
-                          <TableCell colSpan={7} sx={{ textAlign: 'center', py: 2 }}>
-                            <Typography variant="body2" sx={{ color: '#7F8C8D', fontStyle: 'italic' }}>
-                              ... {actualRank - 11} more managers ...
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      <TableRow
-                        key={entry.managerId}
-                        sx={{
-                          '&:hover': { backgroundColor: '#F8F9FA' },
-                          backgroundColor: isCurrentUser
-                            ? 'rgba(0, 191, 165, 0.1)'
-                            : actualRank <= 3 ? '#FFFBF0' : 'inherit',
-                          border: isCurrentUser ? '2px solid #00BFA5' : 'none',
-                        }}
-                      >
-                        <TableCell>
-                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            {getRankMedal(actualRank)}
-                          </Typography>
-                        </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar src={entry.avatarUrl} sx={{ width: 40, height: 40 }}>
-                          {entry.displayName.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                            {entry.displayName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {entry.totalMonths} months active
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#00BFA5' }}>
-                          {entry.overallXP?.toFixed(0) || 0}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={getLevelProgress(entry.overallXP || 0)}
-                          sx={{ mt: 1, height: 6, borderRadius: 3 }}
-                        />
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={`Level ${calculateLevel(entry.overallXP || 0)}`}
-                        color="secondary"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <Whatshot sx={{ color: entry.currentStreak > 0 ? '#FF6B6B' : '#BDC3C7' }} />
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                          {entry.currentStreak || 0}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          (Best: {entry.longestStreak || 0})
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={entry.averageScore?.toFixed(2) || '0.00'}
-                        color="primary"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-                        {entry.goldCount > 0 && (
-                          <Chip label={`🥇 ${entry.goldCount}`} size="small" sx={{ backgroundColor: '#FFD700' }} />
-                        )}
-                        {entry.silverCount > 0 && (
-                          <Chip label={`🥈 ${entry.silverCount}`} size="small" sx={{ backgroundColor: '#C0C0C0' }} />
-                        )}
-                        {entry.bronzeCount > 0 && (
-                          <Chip label={`🥉 ${entry.bronzeCount}`} size="small" sx={{ backgroundColor: '#CD7F32' }} />
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                    </>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {hasMore && (
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => setShowAll(true)}
-                sx={{
-                  borderColor: '#00BFA5',
-                  color: '#00BFA5',
-                  fontWeight: 600,
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2,
-                  '&:hover': {
-                    borderColor: '#00897B',
-                    bgcolor: 'rgba(0, 191, 165, 0.1)',
-                  },
-                }}
-              >
-                Show All {leaderboard.length} Managers
-              </Button>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-    </Box>
+      {/* Remaining Rankings */}
+      {remainingEntries.length > 0 && (
+        <LeaderboardListCard
+          entries={remainingEntries}
+          scoreLabel="Overall XP"
+          showAll={showAll}
+          onToggleShowAll={() => setShowAll(!showAll)}
+        />
+      )}
+    </Container>
   );
 }
 

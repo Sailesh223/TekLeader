@@ -8,7 +8,6 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  Avatar,
   Divider,
   IconButton,
   AppBar,
@@ -29,8 +28,9 @@ import {
   Whatshot as OverallIcon,
 } from '@mui/icons-material';
 import { useStore } from '../store/useStore';
+import UserAvatar from './UserAvatar';
 
-const DRAWER_WIDTH = 260;
+const DRAWER_WIDTH = 200;
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -99,57 +99,75 @@ export default function Layout() {
           },
         }}
       >
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <BusinessIcon sx={{ fontSize: 48, mb: 1 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+        {/* Tekion Logo Header */}
+        <Box sx={{ p: 2.5, textAlign: 'center' }}>
+          <img
+            src="https://media.licdn.com/dms/image/v2/C5622AQGYuaZJu_FvbQ/feedshare-shrink_800/feedshare-shrink_800/0/1642346871207?e=2147483647&v=beta&t=-SwXfx6quNnav_rArAHPx4hn-IDAf9twjqSIAXz-MlA"
+            alt="Tekion Logo"
+            style={{
+              height: '38px',
+              width: 'auto',
+              marginBottom: '12px',
+              filter: 'brightness(0) invert(1)', // Make logo white
+            }}
+          />
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '0.5px',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #E0E0E0 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            }}
+          >
             TekLeader
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.9 }}>
-            Lattice Utilization
           </Typography>
         </Box>
 
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
 
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ px: 1.5, py: 2 }}>
           <Box
             sx={{
               background: 'rgba(255,255,255,0.15)',
               backdropFilter: 'blur(10px)',
               borderRadius: 2,
-              p: 2,
+              p: 1.5,
               textAlign: 'center',
             }}
           >
-            <Avatar
+            <UserAvatar
+              name={userInfo?.displayName || (isAdminPath ? 'Admin User' : 'User')}
+              email={userInfo?.email}
               sx={{
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 mx: 'auto',
                 mb: 1,
                 bgcolor: 'rgba(255,255,255,0.3)',
-                fontSize: '1.5rem',
+                fontSize: '1.25rem',
               }}
-            >
-              {userInfo?.displayName?.charAt(0).toUpperCase() || (isAdminPath ? 'A' : 'U')}
-            </Avatar>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            />
+            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
               {userInfo?.displayName || (isAdminPath ? 'Admin User' : 'User')}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
+            <Typography variant="caption" sx={{ opacity: 0.8, fontSize: '0.75rem' }}>
               {userInfo?.email || (isAdminPath ? 'jithu@gmail.com' : 'SSO User')}
             </Typography>
           </Box>
         </Box>
 
-        <List sx={{ px: 2, flexGrow: 1 }}>
+        <List sx={{ px: 1.5, flexGrow: 1 }}>
           {menuItems.map((item) => (
-            <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
+            <ListItem key={item.path} disablePadding sx={{ mb: 0.75 }}>
               <ListItemButton
                 onClick={() => navigate(item.path)}
                 selected={location.pathname === item.path}
                 sx={{
                   borderRadius: 2,
+                  py: 1,
                   '&.Mui-selected': {
                     background: 'rgba(255,255,255,0.25)',
                     backdropFilter: 'blur(10px)',
@@ -162,10 +180,16 @@ export default function Layout() {
                   },
                 }}
               >
-                <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.text} />
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           ))}
@@ -173,20 +197,27 @@ export default function Layout() {
 
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
 
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ px: 1.5, py: 2 }}>
           <ListItemButton
             onClick={handleLogout}
             sx={{
               borderRadius: 2,
+              py: 1,
               '&:hover': {
                 background: 'rgba(255,255,255,0.15)',
               },
             }}
           >
-            <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+            <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
               <LogoutIcon />
             </ListItemIcon>
-            <ListItemText primary="Logout" />
+            <ListItemText
+              primary="Logout"
+              primaryTypographyProps={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+              }}
+            />
           </ListItemButton>
         </Box>
       </Drawer>
@@ -205,8 +236,23 @@ export default function Layout() {
           }}
         >
           <Toolbar>
-            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600, color: 'white' }}>
-              {isAdminPath ? 'Admin Dashboard' : 'User Dashboard'}
+            <Typography
+              variant="body1"
+              sx={{
+                flexGrow: 1,
+                fontWeight: 600,
+                fontFamily: "'Orbitron', sans-serif",
+                letterSpacing: '1.5px',
+                fontSize: '0.95rem',
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #E0F7F4 50%, #B2EBF2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textShadow: 'none',
+                textTransform: 'uppercase',
+                opacity: 0.95,
+              }}
+            >
+              Performance Progress Precision
             </Typography>
             <IconButton sx={{ color: 'white', mr: 1 }}>
               <NotificationsIcon />

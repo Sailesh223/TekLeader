@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { leaderboardApi, ManagerEntry } from '../api/client';
 import { useStore } from '../store/useStore';
 import { bandColors } from '../theme';
+import UserAvatar from '../components/UserAvatar';
 import {
   EmojiEvents as TrophyIcon,
   Star as StarIcon,
@@ -434,13 +435,13 @@ export default function UserDashboard() {
                     width: 100,
                     height: 100,
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(192, 192, 192, 0.2) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(160, 208, 224, 0.25) 0%, transparent 70%)',
                   }}
                 />
                 <Typography variant="body2" sx={{ color: '#00897B', mb: 1, fontWeight: 500 }}>
                   🥈 Silver Achievers
                 </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 700, color: '#C0C0C0' }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, color: '#A0D0E0' }}>
                   {statistics.bandDistribution?.Silver || 0}
                 </Typography>
               </CardContent>
@@ -541,17 +542,15 @@ export default function UserDashboard() {
 
                         <Grid item xs={12} md={3}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar
+                            <UserAvatar
+                              name={manager.manager.displayName}
+                              email={manager.manager.email}
                               sx={{
-                                bgcolor: getBandColor(manager.classificationBand),
                                 width: 48,
                                 height: 48,
-                                fontSize: '1.25rem',
-                                fontWeight: 700,
+                                border: `3px solid ${getBandColor(manager.classificationBand)}`,
                               }}
-                            >
-                              {manager.manager.displayName.charAt(0)}
-                            </Avatar>
+                            />
                             <Box>
                               <Typography variant="body1" sx={{ fontWeight: 600, color: '#2C3E50' }}>
                                 {manager.manager.displayName}

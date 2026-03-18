@@ -1,5 +1,4 @@
 # Backends Run Instructions
-cd backend && export JAVA_HOME=$(/usr/libexec/java_home -v 17) && mvn spring-boot:run
-
+export JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home && mvn clean spring-boot:run
 # Frontend Run
 cd frontend && yarn dev

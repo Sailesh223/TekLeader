@@ -2,28 +2,18 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  Avatar,
-  Chip,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Alert,
-  Button,
+  Container,
   FormControl,
   Select,
   MenuItem,
   InputLabel,
 } from '@mui/material';
-import { EmojiEvents, TrendingUp, CalendarMonth } from '@mui/icons-material';
 import { leaderboardApi } from '../api/client';
 import { useStore } from '../store/useStore';
+import LeaderboardPodium from '../components/leaderboard/LeaderboardPodium';
+import LeaderboardListCard from '../components/leaderboard/LeaderboardListCard';
 
 interface SeasonalEntry {
   managerId: string;
@@ -86,7 +76,7 @@ export default function SeasonalLeaderboardPage() {
   const getBandColor = (band: string) => {
     switch (band) {
       case 'Gold': return '#FFD700';
-      case 'Silver': return '#C0C0C0';
+      case 'Silver': return '#A0D0E0';
       case 'Bronze': return '#CD7F32';
       default: return '#95A5A6';
     }
@@ -142,13 +132,51 @@ export default function SeasonalLeaderboardPage() {
     );
   }
 
+  // Prepare data for podium (top 3)
+  const topThree = leaderboard.slice(0, 3).map((entry, index) => {
+    const isCurrentUser = userInfo && (
+      entry.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
+      entry.email.toLowerCase() === userInfo.email.toLowerCase()
+    );
+
+    return {
+      name: entry.displayName,
+      email: entry.email,
+      score: entry.seasonalXP,
+      badge: entry.bestBand !== 'Unranked' ? entry.bestBand : undefined,
+      isCurrentUser,
+    };
+  });
+
+  // Prepare data for list (rank 4+)
+  const remainingEntries = (showAll ? leaderboard : leaderboard.slice(0, 20))
+    .slice(3)
+    .map((entry, index) => {
+      const rank = index + 4;
+      const isCurrentUser = userInfo && (
+        entry.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
+        entry.email.toLowerCase() === userInfo.email.toLowerCase()
+      );
+
+      return {
+        rank,
+        name: entry.displayName,
+        email: entry.email,
+        score: entry.seasonalXP,
+        badge: entry.bestBand !== 'Unranked' ? entry.bestBand : undefined,
+        badgeColor: getBandColor(entry.bestBand),
+        isCurrentUser,
+      };
+    });
+
   return (
-    <Box sx={{ p: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, color: '#2C3E50', mb: 1 }}>
+        <Typography variant="h3" sx={{ fontWeight: 800, color: '#2C3E50', mb: 1 }}>
           🏆 Seasonal Leaderboard
         </Typography>
-        <Typography variant="h6" sx={{ color: '#7F8C8D' }}>
+        <Typography variant="h6" sx={{ color: '#7F8C8D', fontWeight: 400 }}>
           Quarterly Performance Rankings
         </Typography>
       </Box>
@@ -160,9 +188,8 @@ export default function SeasonalLeaderboardPage() {
       )}
 
       {/* Season Selector */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
-        <CalendarMonth sx={{ color: '#00BFA5', fontSize: 32 }} />
-        <FormControl sx={{ minWidth: 200 }}>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
+        <FormControl sx={{ minWidth: 250 }}>
           <InputLabel id="season-select-label">Select Season</InputLabel>
           <Select
             labelId="season-select-label"
@@ -171,6 +198,7 @@ export default function SeasonalLeaderboardPage() {
             label="Select Season"
             onChange={(e) => setSelectedSeason(e.target.value)}
             sx={{
+              borderRadius: 2,
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#00BFA5',
               },
@@ -191,128 +219,25 @@ export default function SeasonalLeaderboardPage() {
         </FormControl>
       </Box>
 
-      <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-        <CardContent>
-          <TableContainer component={Paper} elevation={0}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: '#F8F9FA' }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Rank</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Manager</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Avg Score</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Seasonal XP</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Months Active</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 700 }}>Best Band</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {displayedEntries.map((entry, displayIndex) => {
-                  const actualRank = leaderboard.findIndex(e => e.managerId === entry.managerId) + 1;
-                  const isCurrentUser = userInfo && (
-                    entry.displayName.toLowerCase() === userInfo.displayName.toLowerCase() ||
-                    entry.email.toLowerCase() === userInfo.email.toLowerCase()
-                  );
-                  const isOutsideTopTen = actualRank > 10 && isCurrentUser;
+      {/* Top 3 Podium */}
+      {topThree.length > 0 && (
+        <LeaderboardPodium
+          topThree={topThree}
+          scoreLabel="Seasonal XP"
+          title="🏆 Top Performers"
+        />
+      )}
 
-                  return (
-                    <>
-                      {isOutsideTopTen && (
-                        <TableRow>
-                          <TableCell colSpan={6} sx={{ textAlign: 'center', py: 2 }}>
-                            <Typography variant="body2" sx={{ color: '#7F8C8D', fontStyle: 'italic' }}>
-                              ... {actualRank - 11} more managers ...
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      <TableRow
-                        key={entry.managerId}
-                        sx={{
-                          '&:hover': { backgroundColor: '#F8F9FA' },
-                          backgroundColor: isCurrentUser
-                            ? 'rgba(0, 191, 165, 0.1)'
-                            : actualRank <= 3 ? '#FFFBF0' : 'inherit',
-                          border: isCurrentUser ? '2px solid #00BFA5' : 'none',
-                        }}
-                      >
-                        <TableCell>
-                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            {getRankMedal(actualRank)}
-                          </Typography>
-                        </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar src={entry.avatarUrl} sx={{ width: 40, height: 40 }}>
-                          {entry.displayName.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                            {entry.displayName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {entry.email}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={entry.averageScore.toFixed(2)}
-                        color="primary"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body1" sx={{ fontWeight: 600, color: '#00BFA5' }}>
-                        {entry.seasonalXP?.toFixed(0) || 0} XP
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">{entry.monthsActive}</TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={entry.bestBand}
-                        sx={{
-                          backgroundColor: getBandColor(entry.bestBand),
-                          color: '#000',
-                          fontWeight: 600,
-                        }}
-                        size="small"
-                      />
-                    </TableCell>
-                  </TableRow>
-                    </>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {hasMore && (
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={() => setShowAll(true)}
-                sx={{
-                  borderColor: '#00BFA5',
-                  color: '#00BFA5',
-                  fontWeight: 600,
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2,
-                  '&:hover': {
-                    borderColor: '#00897B',
-                    bgcolor: 'rgba(0, 191, 165, 0.1)',
-                  },
-                }}
-              >
-                Show All {leaderboard.length} Managers
-              </Button>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-    </Box>
+      {/* Remaining Rankings */}
+      {remainingEntries.length > 0 && (
+        <LeaderboardListCard
+          entries={remainingEntries}
+          scoreLabel="Seasonal XP"
+          showAll={showAll}
+          onToggleShowAll={() => setShowAll(!showAll)}
+        />
+      )}
+    </Container>
   );
 }
 

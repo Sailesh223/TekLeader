@@ -13,6 +13,7 @@ import {
   Paper,
   Button,
   Tooltip,
+  IconButton,
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
@@ -23,6 +24,7 @@ import {
   People as PeopleIcon,
   Download as DownloadIcon,
   Whatshot as FireIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { managerApi, leaderboardApi, ManagerHistoryResponse } from '../api/client';
@@ -32,6 +34,9 @@ import PerformanceCharts from '../components/PerformanceCharts';
 import TeamMemberFilters from '../components/TeamMemberFilters';
 import { exportTeamMembersToCSV } from '../utils/exportUtils';
 import AchievementModal from '../components/AchievementModal';
+import UserAvatar from '../components/UserAvatar';
+import AvatarPicker from '../components/AvatarPicker';
+import { getStorageKey } from '../utils/avatarGenerator';
 
 const MotionCard = motion(Card);
 
@@ -88,12 +93,22 @@ export default function PersonalDashboard() {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [achievementOpen, setAchievementOpen] = useState(false);
   const [achievementType, setAchievementType] = useState<'levelup' | 'streak' | 'badge' | 'mpl'>('levelup');
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [avatarId, setAvatarId] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
 
   useEffect(() => {
     if (userInfo?.displayName) {
       loadHistory();
     }
   }, [userInfo]);
+
+  // Load avatar preferences after data is loaded
+  useEffect(() => {
+    if (data?.manager) {
+      loadAvatarPreferences();
+    }
+  }, [data?.manager]);
 
   const loadHistory = async () => {
     if (!userInfo?.displayName) return;
@@ -116,6 +131,59 @@ export default function PersonalDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAvatarPreferences = () => {
+    if (!data?.manager) return;
+
+    // Load from localStorage for now (can be moved to backend later)
+    const storageKey = getStorageKey(data.manager.email, data.manager.displayName);
+    const saved = localStorage.getItem(storageKey);
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.avatarId) {
+          setAvatarId(parsed.avatarId);
+        }
+        if (parsed.avatarUrl) {
+          setAvatarUrl(parsed.avatarUrl);
+        }
+      } catch (e) {
+        console.error('Failed to load avatar preferences:', e);
+      }
+    }
+  };
+
+  const handleSaveAvatar = (newAvatarId: string, newAvatarUrl: string) => {
+    if (!data?.manager) return;
+
+    // Update state immediately
+    setAvatarId(newAvatarId);
+    setAvatarUrl(newAvatarUrl);
+
+    // Save to localStorage (can be moved to backend later)
+    const storageKey = getStorageKey(data.manager.email, data.manager.displayName);
+    const saveData = {
+      avatarId: newAvatarId,
+      avatarUrl: newAvatarUrl
+    };
+    localStorage.setItem(storageKey, JSON.stringify(saveData));
+
+    console.log('✅ Avatar saved!', {
+      storageKey,
+      avatarId: newAvatarId,
+      isCustomUpload: newAvatarUrl.startsWith('data:image'),
+      saved: true
+    });
+
+    // Force a re-render by triggering a custom event (storage event doesn't work in same tab)
+    const event = new CustomEvent('avatarChanged', {
+      detail: { storageKey, avatarId: newAvatarId, avatarUrl: newAvatarUrl }
+    });
+    console.log('📢 Dispatching avatarChanged event:', event);
+    window.dispatchEvent(event);
+    console.log('📢 Event dispatched successfully');
   };
 
   // Filter team members - MUST be before any conditional returns
@@ -182,19 +250,40 @@ export default function PersonalDashboard() {
   return (
     <Box>
       {/* Welcome Header */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Avatar
-          sx={{
-            width: 100,
-            height: 100,
-            margin: '0 auto 16px',
-            bgcolor: '#00BFA5',
-            fontSize: '2.5rem',
-            fontWeight: 700,
-          }}
-        >
-          {manager.displayName.charAt(0).toUpperCase()}
-        </Avatar>
+      <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
+        <Box sx={{ position: 'relative', display: 'inline-block' }}>
+          <UserAvatar
+            name={manager.displayName}
+            email={manager.email}
+            sx={{
+              width: 120,
+              height: 120,
+              margin: '0 auto 16px',
+              border: '4px solid #00BFA5',
+              boxShadow: '0 4px 12px rgba(0, 191, 165, 0.3)',
+            }}
+          />
+          <Tooltip title="Customize Avatar">
+            <IconButton
+              onClick={() => setAvatarPickerOpen(true)}
+              sx={{
+                position: 'absolute',
+                bottom: 10,
+                right: -5,
+                bgcolor: '#00BFA5',
+                color: 'white',
+                width: 36,
+                height: 36,
+                '&:hover': {
+                  bgcolor: '#00897B',
+                },
+                boxShadow: 2,
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <Typography variant="h3" sx={{ fontWeight: 700, color: '#00897B', mb: 1 }}>
           Welcome back, {manager.displayName}! 👋
         </Typography>
@@ -662,16 +751,16 @@ export default function PersonalDashboard() {
                 >
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Avatar
+                      <UserAvatar
+                        name={member.name}
+                        email={member.name}
                         sx={{
                           width: 40,
                           height: 40,
-                          bgcolor: member.isUtilizing ? '#4CAF50' : '#FF9800',
                           mr: 1.5,
+                          border: `2px solid ${member.isUtilizing ? '#4CAF50' : '#FF9800'}`,
                         }}
-                      >
-                        {member.name.charAt(0)}
-                      </Avatar>
+                      />
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="body1" sx={{ fontWeight: 600, color: '#00897B' }}>
                           {member.name}
@@ -761,6 +850,16 @@ export default function PersonalDashboard() {
         open={achievementOpen}
         onClose={() => setAchievementOpen(false)}
         type={achievementType}
+      />
+
+      {/* Avatar Picker Modal */}
+      <AvatarPicker
+        open={avatarPickerOpen}
+        onClose={() => setAvatarPickerOpen(false)}
+        onSave={handleSaveAvatar}
+        currentAvatarId={avatarId}
+        currentAvatarUrl={avatarUrl}
+        userName={manager.displayName}
       />
     </Box>
   );
