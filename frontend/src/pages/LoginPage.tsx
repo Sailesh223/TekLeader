@@ -21,7 +21,122 @@ import {
   Login as LoginIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
+import { useRive } from '@rive-app/react-canvas';
 import { useStore } from '../store/useStore';
+
+function RiveAnimationSection() {
+  const { rive, RiveComponent } = useRive({
+    src: '/19489-36629-happy-meeple.riv',
+    artboard: 'Artboard',
+    stateMachines: 'Meeples', // Correct state machine name from Rive marketplace
+    autoplay: true,
+    onLoad: () => {
+      console.log('✅ Rive animation loaded with interactive state machine');
+    },
+  });
+
+  // Log rive instance for debugging
+  useEffect(() => {
+    if (rive) {
+      console.log('🎨 Rive instance:', rive);
+      console.log('📊 Available state machines:', rive.stateMachineNames);
+      console.log('🎭 Available artboards:', rive.artboardNames);
+    }
+  }, [rive]);
+
+  return (
+    <Box
+      sx={{
+        flex: 2, // Give more space to left side (2:1 ratio)
+        display: { xs: 'none', md: 'flex' },
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        flexDirection: 'column',
+        p: 0,
+        background: 'linear-gradient(180deg, #ECECEC 0%, #E0E0E0 50%, #ECECEC 100%)', // Light gradient to match Rive image bg
+      }}
+    >
+      {/* Tekion Logo at Top Left */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          zIndex: 10,
+        }}
+      >
+        <img
+          src="https://media.licdn.com/dms/image/v2/C5622AQGYuaZJu_FvbQ/feedshare-shrink_800/feedshare-shrink_800/0/1642346871207?e=2147483647&v=beta&t=-SwXfx6quNnav_rArAHPx4hn-IDAf9twjqSIAXz-MlA"
+          alt="Tekion Logo"
+          style={{
+            height: '48px',
+            width: 'auto',
+          }}
+        />
+      </Box>
+
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          maxHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          '& canvas': {
+            cursor: 'pointer',
+          },
+        }}
+      >
+        <RiveComponent
+          style={{
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      </Box>
+
+      {/* Catchy Text Overlay */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 60,
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          px: 4,
+        }}
+      >
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 800,
+            mb: 1,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontFamily: '"Poppins", "Roboto", sans-serif',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          TekLeader : Level Up Your Leadership
+        </Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            color: '#2C3E50',
+            fontWeight: 500,
+            fontFamily: '"Poppins", "Roboto", sans-serif',
+          }}
+        >
+          Track. Compete. Excel.
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -131,67 +246,24 @@ export default function LoginPage() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        height: '100vh',
         display: 'flex',
-        background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 50%, #004D40 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Left Side - Decorative */}
-      <Box
-        sx={{
-          flex: 1,
-          display: { xs: 'none', md: 'flex' },
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: '10%',
-            left: '10%',
-            width: '300px',
-            height: '300px',
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.15)',
-            filter: 'blur(60px)',
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: '15%',
-            right: '15%',
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            background: 'rgba(0, 191, 165, 0.3)',
-            filter: 'blur(50px)',
-          },
-        }}
-      >
-        <Box sx={{ position: 'relative', zIndex: 1, textAlign: 'center', color: 'white', px: 4 }}>
-          <BusinessIcon sx={{ fontSize: 80, mb: 2, opacity: 0.9 }} />
-          <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-            TekLeader
-          </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.9, mb: 1 }}>
-            Lattice Utilization Leaderboard
-          </Typography>
-          <Typography variant="body1" sx={{ opacity: 0.7, maxWidth: 400, mx: 'auto' }}>
-            Track manager performance, team utilization, and drive excellence across your organization
-          </Typography>
-        </Box>
-      </Box>
+      {/* Left Side - Rive Animation */}
+      <RiveAnimationSection />
 
       {/* Right Side - Login Form */}
       <Box
         sx={{
-          flex: 1,
+          flex: 1, // Smaller flex ratio (2:1 with left side)
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           p: 4,
+          bgcolor: '#F0F2F5', // Lighter background for right side
         }}
       >
         <Card

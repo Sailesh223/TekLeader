@@ -75,6 +75,12 @@ public class DataInitializer implements CommandLineRunner {
                 .classificationThresholds(classificationThresholds)
                 .consistencyPenaltyMultiplier(new BigDecimal("2.0"))
                 .consistencyMonthsToConsider(3)
+                .tierSameScore(100)
+                .tierOneLevelDownScore(80)
+                .tierTwoLevelsDownScore(50)
+                .tierThreeLevelsDownScore(30)
+                .seasonalPeriodType("QUARTERLY")
+                .seasonalCustomMonths(3)
                 .active(true)
                 .createdBy("system")
                 .build();

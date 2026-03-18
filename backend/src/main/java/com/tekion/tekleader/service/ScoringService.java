@@ -37,6 +37,47 @@ public class ScoringService {
     }
     
     public BigDecimal calculateConsistencyScore(
+        String currentTier,
+        String previousTier,
+        FormulaConfig formula
+    ) {
+        if (previousTier == null || previousTier.isEmpty()) {
+            return BigDecimal.valueOf(50.0);
+        }
+
+        int tierDifference = getTierDifference(currentTier, previousTier);
+
+        switch (tierDifference) {
+            case 0:
+                return BigDecimal.valueOf(formula.getTierSameScore());
+            case 1:
+                return BigDecimal.valueOf(formula.getTierOneLevelDownScore());
+            case 2:
+                return BigDecimal.valueOf(formula.getTierTwoLevelsDownScore());
+            case 3:
+            default:
+                return BigDecimal.valueOf(formula.getTierThreeLevelsDownScore());
+        }
+    }
+
+    private int getTierDifference(String currentTier, String previousTier) {
+        int currentLevel = getTierLevel(currentTier);
+        int previousLevel = getTierLevel(previousTier);
+        return Math.abs(currentLevel - previousLevel);
+    }
+
+    private int getTierLevel(String tier) {
+        switch (tier) {
+            case "Gold": return 3;
+            case "Silver": return 2;
+            case "Bronze": return 1;
+            case "Ignition Zone": return 0;
+            default: return 0;
+        }
+    }
+
+    @Deprecated
+    public BigDecimal calculateConsistencyScoreOld(
         BigDecimal currentUtilization,
         BigDecimal previousUtilization,
         BigDecimal penaltyMultiplier
@@ -56,16 +97,16 @@ public class ScoringService {
     public BigDecimal calculateMultiMonthConsistencyScore(
         String managerId,
         String currentMonth,
-        BigDecimal currentUtilization,
-        BigDecimal penaltyMultiplier,
+        String currentTier,
+        FormulaConfig formula,
         Integer monthsToConsider
     ) {
         if (monthsToConsider == null || monthsToConsider < 2) {
             monthsToConsider = 2;
         }
 
-        List<BigDecimal> utilizationHistory = new ArrayList<>();
-        utilizationHistory.add(currentUtilization);
+        List<String> tierHistory = new ArrayList<>();
+        tierHistory.add(currentTier);
 
         String month = currentMonth;
         for (int i = 1; i < monthsToConsider; i++) {
@@ -74,31 +115,26 @@ public class ScoringService {
                 .findByManagerIdAndMonth(managerId, month);
 
             if (metric.isPresent()) {
-                utilizationHistory.add(metric.get().getUtilization());
+                tierHistory.add(metric.get().getClassificationBand());
             } else {
                 break;
             }
         }
 
-        if (utilizationHistory.size() < 2) {
+        if (tierHistory.size() < 2) {
             return BigDecimal.valueOf(50.0);
         }
 
-        BigDecimal totalPenalty = BigDecimal.ZERO;
+        BigDecimal totalScore = BigDecimal.ZERO;
         int comparisons = 0;
 
-        for (int i = 0; i < utilizationHistory.size() - 1; i++) {
-            BigDecimal delta = utilizationHistory.get(i).subtract(utilizationHistory.get(i + 1)).abs();
-            totalPenalty = totalPenalty.add(delta);
+        for (int i = 0; i < tierHistory.size() - 1; i++) {
+            BigDecimal score = calculateConsistencyScore(tierHistory.get(i), tierHistory.get(i + 1), formula);
+            totalScore = totalScore.add(score);
             comparisons++;
         }
 
-        BigDecimal avgDelta = totalPenalty.divide(BigDecimal.valueOf(comparisons), 2, RoundingMode.HALF_UP);
-        BigDecimal penalty = penaltyMultiplier.multiply(avgDelta);
-        BigDecimal rawScore = BigDecimal.valueOf(100.0).subtract(penalty);
-
-        return rawScore.max(BigDecimal.ZERO).min(BigDecimal.valueOf(100.0))
-            .setScale(2, RoundingMode.HALF_UP);
+        return totalScore.divide(BigDecimal.valueOf(comparisons), 2, RoundingMode.HALF_UP);
     }
     
     public BigDecimal calculateFinalScore(
@@ -137,6 +173,14 @@ public class ScoringService {
             .findByManagerIdAndMonth(managerId, previousMonth);
 
         return prevMetric.map(MonthlyMetric::getUtilization).orElse(null);
+    }
+
+    public String getPreviousMonthTier(String managerId, String currentMonth) {
+        String previousMonth = getPreviousMonth(currentMonth);
+        Optional<MonthlyMetric> prevMetric = monthlyMetricRepository
+            .findByManagerIdAndMonth(managerId, previousMonth);
+
+        return prevMetric.map(MonthlyMetric::getClassificationBand).orElse(null);
     }
     
     private String getPreviousMonth(String month) {

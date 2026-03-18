@@ -88,7 +88,13 @@ export interface FormulaConfig {
   utilizationWeight: number;
   teamSizeWeight: number;
   consistencyWeight: number;
-  consistencyPenaltyMultiplier: number;
+  consistencyPenaltyMultiplier?: number;
+  tierSameScore?: number;
+  tierOneLevelDownScore?: number;
+  tierTwoLevelsDownScore?: number;
+  tierThreeLevelsDownScore?: number;
+  seasonalPeriodType?: string;
+  seasonalCustomMonths?: number;
   teamSizeMapping: {
     '1-3': number;
     '4-6': number;
@@ -121,6 +127,11 @@ export const leaderboardApi = {
     return response.data;
   },
 
+  getAvailableSeasons: async (): Promise<{ seasons: string[]; latestSeason: string }> => {
+    const response = await apiClient.get('/seasons');
+    return response.data;
+  },
+
   deleteDataByMonth: async (month: string): Promise<DeleteResponse> => {
     const response = await apiClient.delete('/data', { params: { month } });
     return response.data;
@@ -128,6 +139,18 @@ export const leaderboardApi = {
 
   deleteAllData: async (): Promise<DeleteResponse> => {
     const response = await apiClient.delete('/data/all');
+    return response.data;
+  },
+
+  getSeasonalLeaderboard: async (season?: string): Promise<any[]> => {
+    const response = await apiClient.get('/leaderboard/seasonal', {
+      params: season ? { season } : {}
+    });
+    return response.data;
+  },
+
+  getOverallLeaderboard: async (): Promise<any[]> => {
+    const response = await apiClient.get('/leaderboard/overall');
     return response.data;
   },
 };

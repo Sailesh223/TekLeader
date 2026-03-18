@@ -79,5 +79,28 @@ public class LeaderboardController {
         ManagerHistoryResponse response = managerHistoryService.getManagerHistory(displayName);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/leaderboard/seasonal")
+    @Operation(summary = "Get seasonal leaderboard", description = "Fetch seasonal leaderboard based on current season configuration")
+    public ResponseEntity<List<Map<String, Object>>> getSeasonalLeaderboard(
+        @RequestParam(required = false) String season
+    ) {
+        List<Map<String, Object>> leaderboard = leaderboardService.getSeasonalLeaderboard(season);
+        return ResponseEntity.ok(leaderboard);
+    }
+
+    @GetMapping("/seasons")
+    @Operation(summary = "Get available seasons", description = "Get list of all available seasons/quarters with data")
+    public ResponseEntity<Map<String, Object>> getAvailableSeasons() {
+        Map<String, Object> seasons = leaderboardService.getAvailableSeasons();
+        return ResponseEntity.ok(seasons);
+    }
+
+    @GetMapping("/leaderboard/overall")
+    @Operation(summary = "Get overall leaderboard", description = "Fetch overall all-time leaderboard based on total XP")
+    public ResponseEntity<List<Map<String, Object>>> getOverallLeaderboard() {
+        List<Map<String, Object>> leaderboard = leaderboardService.getOverallLeaderboard();
+        return ResponseEntity.ok(leaderboard);
+    }
 }
 

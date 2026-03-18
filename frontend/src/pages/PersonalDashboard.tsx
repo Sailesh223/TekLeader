@@ -12,6 +12,7 @@ import {
   LinearProgress,
   Paper,
   Button,
+  Tooltip,
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
@@ -21,6 +22,7 @@ import {
   Timeline as TimelineIcon,
   People as PeopleIcon,
   Download as DownloadIcon,
+  Whatshot as FireIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { managerApi, leaderboardApi, ManagerHistoryResponse } from '../api/client';
@@ -29,8 +31,52 @@ import { bandColors } from '../theme';
 import PerformanceCharts from '../components/PerformanceCharts';
 import TeamMemberFilters from '../components/TeamMemberFilters';
 import { exportTeamMembersToCSV } from '../utils/exportUtils';
+import AchievementModal from '../components/AchievementModal';
 
 const MotionCard = motion(Card);
+
+// Exponential leveling helper functions
+// Level 1: 0-200 XP, Level 2: 200-600 XP (400 more), Level 3: 600-1400 XP (800 more), etc.
+const calculateLevel = (xp: number): number => {
+  if (xp <= 0) return 1;
+
+  let level = 1;
+  let xpRequired = 200;
+  let accumulatedXP = 0;
+
+  while (accumulatedXP + xpRequired <= xp) {
+    accumulatedXP += xpRequired;
+    level++;
+    xpRequired *= 2; // Double the XP required for next level
+  }
+
+  return level;
+};
+
+const getXPForLevel = (level: number): number => {
+  if (level <= 1) return 0;
+  let total = 0;
+  for (let i = 1; i < level; i++) {
+    total += Math.pow(2, i - 1) * 200;
+  }
+  return total;
+};
+
+const getXPToNextLevel = (currentXP: number): number => {
+  const currentLevel = calculateLevel(currentXP);
+  const xpForCurrentLevel = getXPForLevel(currentLevel);
+  const xpForNextLevel = getXPForLevel(currentLevel + 1);
+  return Math.ceil(xpForNextLevel - currentXP);
+};
+
+const getLevelProgress = (currentXP: number): number => {
+  const currentLevel = calculateLevel(currentXP);
+  const xpForCurrentLevel = getXPForLevel(currentLevel);
+  const xpForNextLevel = getXPForLevel(currentLevel + 1);
+  const xpInCurrentLevel = currentXP - xpForCurrentLevel;
+  const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
+  return (xpInCurrentLevel / xpNeededForLevel) * 100;
+};
 
 export default function PersonalDashboard() {
   const { userInfo } = useStore();
@@ -40,6 +86,8 @@ export default function PersonalDashboard() {
   const [totalManagers, setTotalManagers] = useState<number>(0);
   const [utilizationFilter, setUtilizationFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [achievementOpen, setAchievementOpen] = useState(false);
+  const [achievementType, setAchievementType] = useState<'levelup' | 'streak' | 'badge' | 'mpl'>('levelup');
 
   useEffect(() => {
     if (userInfo?.displayName) {
@@ -154,6 +202,113 @@ export default function PersonalDashboard() {
           {summary.motivationalMessage}
         </Typography>
       </Box>
+
+      {/* XP and Level Section */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <MotionCard
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              cursor: 'pointer',
+              '&:hover': { transform: 'scale(1.02)', transition: 'all 0.3s' },
+            }}
+            onClick={() => {
+              setAchievementType('levelup');
+              setAchievementOpen(true);
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  🎮 Overall Progress
+                </Typography>
+                <Chip
+                  label={`Level ${calculateLevel(manager.overallXP || 0)}`}
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                  }}
+                />
+              </Box>
+              <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
+                {manager.overallXP?.toFixed(0) || 0} XP
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={getLevelProgress(manager.overallXP || 0)}
+                sx={{
+                  height: 10,
+                  borderRadius: 5,
+                  bgcolor: 'rgba(255, 255, 255, 0.3)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: '#FFD700',
+                  },
+                }}
+              />
+              <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.9 }}>
+                {getXPToNextLevel(manager.overallXP || 0)} XP to next level
+              </Typography>
+            </CardContent>
+          </MotionCard>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <MotionCard
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            sx={{
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              color: 'white',
+              cursor: 'pointer',
+              '&:hover': { transform: 'scale(1.02)', transition: 'all 0.3s' },
+            }}
+            onClick={() => {
+              setAchievementType('streak');
+              setAchievementOpen(true);
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  🔥 Seasonal Progress
+                </Typography>
+                <Chip
+                  label={`Level ${calculateLevel(manager.seasonalXP || 0)}`}
+                  sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                  }}
+                />
+              </Box>
+              <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
+                {manager.seasonalXP?.toFixed(0) || 0} XP
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={getLevelProgress(manager.seasonalXP || 0)}
+                sx={{
+                  height: 10,
+                  borderRadius: 5,
+                  bgcolor: 'rgba(255, 255, 255, 0.3)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: '#FFD700',
+                  },
+                }}
+              />
+              <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.9 }}>
+                {getXPToNextLevel(manager.seasonalXP || 0)} XP to next level
+              </Typography>
+            </CardContent>
+          </MotionCard>
+        </Grid>
+      </Grid>
 
       {/* Current Performance Card */}
       {latestPerformance && (
@@ -600,6 +755,13 @@ export default function PersonalDashboard() {
           </Grid>
         </>
       )}
+
+      {/* Achievement Modal */}
+      <AchievementModal
+        open={achievementOpen}
+        onClose={() => setAchievementOpen(false)}
+        type={achievementType}
+      />
     </Box>
   );
 }

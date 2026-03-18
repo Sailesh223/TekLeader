@@ -36,9 +36,22 @@ public class FormulaConfig {
 
     private Map<String, Object> classificationThresholds;
 
+    @Deprecated
     private BigDecimal consistencyPenaltyMultiplier;
 
     private Integer consistencyMonthsToConsider = 2;
+
+    private Integer tierSameScore = 100;
+
+    private Integer tierOneLevelDownScore = 80;
+
+    private Integer tierTwoLevelsDownScore = 50;
+
+    private Integer tierThreeLevelsDownScore = 30;
+
+    private String seasonalPeriodType = "QUARTERLY";
+
+    private Integer seasonalCustomMonths = 3;
 
     private Boolean active = false;
 

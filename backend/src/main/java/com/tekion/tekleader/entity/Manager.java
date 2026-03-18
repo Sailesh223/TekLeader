@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Document(collection = "managers")
@@ -36,6 +37,18 @@ public class Manager {
     private String directorName;
 
     private String functionalHead;
+
+    @Builder.Default
+    private BigDecimal overallXP = BigDecimal.ZERO;
+
+    @Builder.Default
+    private BigDecimal seasonalXP = BigDecimal.ZERO;
+
+    @Builder.Default
+    private Integer currentStreak = 0;
+
+    @Builder.Default
+    private Integer longestStreak = 0;
 
     @CreatedDate
     private LocalDateTime createdAt;

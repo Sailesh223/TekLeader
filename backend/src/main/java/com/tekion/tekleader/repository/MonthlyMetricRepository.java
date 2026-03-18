@@ -19,6 +19,10 @@ public interface MonthlyMetricRepository extends MongoRepository<MonthlyMetric, 
 
     List<MonthlyMetric> findByManagerIdOrderByMonthDesc(String managerId);
 
+    List<MonthlyMetric> findByManagerId(String managerId);
+
+    List<MonthlyMetric> findByMonthIn(List<String> months);
+
     @Query(value = "{}", fields = "{ 'month' : 1 }", sort = "{ 'month' : -1 }")
     List<MonthlyMetric> findDistinctMonths();
 

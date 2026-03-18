@@ -10,6 +10,12 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
 import { formulaApi, FormulaConfig } from '../api/client';
@@ -24,6 +30,12 @@ export default function SettingsPage() {
     teamSizeWeight: 0.2,
     consistencyWeight: 0.1,
     consistencyPenaltyMultiplier: 2.0,
+    tierSameScore: 100,
+    tierOneLevelDownScore: 80,
+    tierTwoLevelsDownScore: 50,
+    tierThreeLevelsDownScore: 30,
+    seasonalPeriodType: 'QUARTERLY',
+    seasonalCustomMonths: 3,
     teamSizeMapping: {
       '1-3': 25,
       '4-6': 50,
@@ -237,21 +249,96 @@ export default function SettingsPage() {
           <Divider sx={{ my: 4 }} />
 
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#2C3E50', mb: 3 }}>
-            Other Parameters
+            Tier-Based Consistency Scoring
           </Typography>
+
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Consistency score is now based on tier changes between months instead of utilization percentage changes.
+          </Alert>
 
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Consistency Penalty Multiplier"
+                label="Same Tier Score"
                 type="number"
-                value={formula.consistencyPenaltyMultiplier}
-                onChange={(e) => handleWeightChange('consistencyPenaltyMultiplier', e.target.value)}
-                inputProps={{ step: 0.1, min: 0 }}
-                helperText="Multiplier for consistency penalty calculation"
+                value={formula.tierSameScore}
+                onChange={(e) => handleWeightChange('tierSameScore', e.target.value)}
+                inputProps={{ min: 0, max: 100 }}
+                helperText="Score when staying in the same tier"
               />
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="One Tier Down Score"
+                type="number"
+                value={formula.tierOneLevelDownScore}
+                onChange={(e) => handleWeightChange('tierOneLevelDownScore', e.target.value)}
+                inputProps={{ min: 0, max: 100 }}
+                helperText="Score when dropping 1 tier (e.g., Gold → Silver)"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Two Tiers Down Score"
+                type="number"
+                value={formula.tierTwoLevelsDownScore}
+                onChange={(e) => handleWeightChange('tierTwoLevelsDownScore', e.target.value)}
+                inputProps={{ min: 0, max: 100 }}
+                helperText="Score when dropping 2 tiers (e.g., Gold → Bronze)"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Three Tiers Down Score"
+                type="number"
+                value={formula.tierThreeLevelsDownScore}
+                onChange={(e) => handleWeightChange('tierThreeLevelsDownScore', e.target.value)}
+                inputProps={{ min: 0, max: 100 }}
+                helperText="Score when dropping 3 tiers (e.g., Gold → Ignition Zone)"
+              />
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 4 }} />
+
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#2C3E50', mb: 3 }}>
+            Seasonal Leaderboard Configuration
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Seasonal Period Type</InputLabel>
+                <Select
+                  value={formula.seasonalPeriodType || 'QUARTERLY'}
+                  onChange={(e) => setFormula({ ...formula, seasonalPeriodType: e.target.value })}
+                  label="Seasonal Period Type"
+                >
+                  <MenuItem value="MONTHLY">Monthly (1 month)</MenuItem>
+                  <MenuItem value="QUARTERLY">Quarterly (3 months)</MenuItem>
+                  <MenuItem value="SEMI_ANNUALLY">Semi-Annually (6 months)</MenuItem>
+                  <MenuItem value="ANNUALLY">Annually (12 months)</MenuItem>
+                  <MenuItem value="CUSTOM">Custom</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            {formula.seasonalPeriodType === 'CUSTOM' && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Custom Months"
+                  type="number"
+                  value={formula.seasonalCustomMonths}
+                  onChange={(e) => handleWeightChange('seasonalCustomMonths', e.target.value)}
+                  inputProps={{ min: 1, max: 12 }}
+                  helperText="Number of months in a season"
+                />
+              </Grid>
+            )}
           </Grid>
 
           <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>

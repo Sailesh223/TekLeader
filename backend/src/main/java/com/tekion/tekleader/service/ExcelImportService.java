@@ -22,13 +22,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ExcelImportService {
-    
+
     private final ManagerRepository managerRepository;
     private final MonthlyMetricRepository monthlyMetricRepository;
     private final UploadHistoryRepository uploadHistoryRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final ScoringService scoringService;
     private final BadgeService badgeService;
+    private final XPService xpService;
     
     private static final String MASTER_REPORT_TAB = "Master Report";
     private static final List<String> FUNCTIONAL_HEADS = Arrays.asList(
@@ -145,6 +146,9 @@ public class ExcelImportService {
 
             updateRankings(month);
             badgeService.awardBadgesForMonth(month);
+
+            // Recalculate seasonal XP for all managers
+            recalculateSeasonalXPForAllManagers(month);
 
         } catch (Exception e) {
             log.error("Error processing Excel file", e);
@@ -312,11 +316,21 @@ public class ExcelImportService {
             agg.headcount, formula.getTeamSizeMapping()
         );
 
+        BigDecimal finalScoreWithoutConsistency = scoringService.calculateFinalScore(
+            agg.utilization, teamSizeScore, BigDecimal.valueOf(50), formula
+        );
+
+        String preliminaryBand = scoringService.classifyManager(
+            finalScoreWithoutConsistency, formula.getClassificationThresholds()
+        );
+
+        String previousTier = scoringService.getPreviousMonthTier(manager.getId(), month);
+
         BigDecimal consistencyScore = scoringService.calculateMultiMonthConsistencyScore(
             manager.getId(),
             month,
-            agg.utilization,
-            formula.getConsistencyPenaltyMultiplier(),
+            preliminaryBand,
+            formula,
             formula.getConsistencyMonthsToConsider()
         );
 
@@ -327,6 +341,10 @@ public class ExcelImportService {
         String band = scoringService.classifyManager(
             finalScore, formula.getClassificationThresholds()
         );
+
+        BigDecimal monthlyXP = xpService.calculateMonthlyXP(finalScore, band);
+        xpService.updateManagerXP(manager.getId(), month, monthlyXP);
+        xpService.updateStreak(manager.getId(), month, finalScore);
 
         if (existing != null) {
             existing.setFunctionalHead(agg.functionalHead);
@@ -495,6 +513,78 @@ public class ExcelImportService {
                     .setScale(2, RoundingMode.HALF_UP);
             }
         }
+    }
+
+    private void recalculateSeasonalXPForAllManagers(String month) {
+        log.info("Recalculating seasonal XP for all managers based on month: {}", month);
+
+        try {
+            FormulaConfig formula = scoringService.getActiveFormula();
+            List<String> seasonMonths = getSeasonMonths(month, formula);
+
+            log.info("Season months for {}: {}", month, seasonMonths);
+
+            // Get all managers who have metrics in any of the season months
+            List<MonthlyMetric> seasonMetrics = monthlyMetricRepository.findByMonthIn(seasonMonths);
+            Set<String> managerIds = seasonMetrics.stream()
+                .map(MonthlyMetric::getManagerId)
+                .collect(Collectors.toSet());
+
+            log.info("Recalculating seasonal XP for {} managers", managerIds.size());
+
+            for (String managerId : managerIds) {
+                xpService.recalculateSeasonalXP(managerId, seasonMonths);
+            }
+
+            log.info("Seasonal XP recalculation completed");
+        } catch (Exception e) {
+            log.error("Error recalculating seasonal XP", e);
+        }
+    }
+
+    private List<String> getSeasonMonths(String currentMonth, FormulaConfig formula) {
+        List<String> months = new ArrayList<>();
+
+        try {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM");
+            java.time.LocalDate current = java.time.LocalDate.parse(currentMonth + "-01");
+
+            int monthsInSeason = getSeasonalMonthCount(formula);
+            int startMonth = getSeasonStartMonth(current, monthsInSeason);
+
+            java.time.LocalDate seasonStart = current.withMonth(startMonth).withDayOfMonth(1);
+
+            for (int i = 0; i < monthsInSeason; i++) {
+                java.time.LocalDate monthDate = seasonStart.plusMonths(i);
+                if (!monthDate.isAfter(current)) {
+                    months.add(monthDate.format(formatter));
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error calculating season months", e);
+            months.add(currentMonth);
+        }
+
+        return months;
+    }
+
+    private int getSeasonalMonthCount(FormulaConfig formula) {
+        String periodType = formula.getSeasonalPeriodType();
+        if (periodType == null) periodType = "QUARTERLY";
+
+        return switch (periodType) {
+            case "MONTHLY" -> 1;
+            case "QUARTERLY" -> 3;
+            case "SEMI_ANNUALLY" -> 6;
+            case "ANNUALLY" -> 12;
+            case "CUSTOM" -> formula.getSeasonalCustomMonths() != null ? formula.getSeasonalCustomMonths() : 3;
+            default -> 3;
+        };
+    }
+
+    private int getSeasonStartMonth(java.time.LocalDate current, int monthsInSeason) {
+        int currentMonth = current.getMonthValue();
+        return ((currentMonth - 1) / monthsInSeason) * monthsInSeason + 1;
     }
 }
 

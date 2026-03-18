@@ -536,6 +536,18 @@
   resolved "https://jfrog-proxy.tekioncloud.xyz/artifactory/api/npm/rpe-virtual-npm/@remix-run/router/-/router-1.23.2.tgz#156c4b481c0bee22a19f7924728a67120de06971"
   integrity sha512-Ic6m2U/rMjTkhERIa/0ZtXJP17QUi2CbWE7cqx4J58M8aA3QTfW+2UlQ4psvTX9IO1RfNVhK3pcpdjej7L+t2w==
 
+"@rive-app/canvas@2.35.2":
+  version "2.35.2"
+  resolved "https://jfrog-proxy.tekioncloud.xyz/artifactory/api/npm/rpe-virtual-npm/@rive-app/canvas/-/canvas-2.35.2.tgz#f7d98e2f40911add7549542691530104811c7d8f"
+  integrity sha512-RkVSoonCmaB0ciQR5H8RF9ofEpxEftby4mj31jGCJ45vGP55FSS3kVia5wDXBI7SMqwxG1ZuBsptQkmvC7xeDA==
+
+"@rive-app/react-canvas@^4.27.1":
+  version "4.27.1"
+  resolved "https://jfrog-proxy.tekioncloud.xyz/artifactory/api/npm/rpe-virtual-npm/@rive-app/react-canvas/-/react-canvas-4.27.1.tgz#d34f33426b1d75fdc896e7c5ece950a3703e6680"
+  integrity sha512-lvQSIOWBckqcqiVSKVA8ou0c7AcgklHUu21okwVq3MvRPB0n7J7yj1HTLFzXBjn5Bzny25rYjimZSViX9bCa7Q==
+  dependencies:
+    "@rive-app/canvas" "2.35.2"
+
 "@rolldown/pluginutils@1.0.0-beta.27":
   version "1.0.0-beta.27"
   resolved "https://jfrog-proxy.tekioncloud.xyz/artifactory/api/npm/rpe-virtual-npm/@rolldown/pluginutils/-/pluginutils-1.0.0-beta.27.tgz#47d2bf4cef6d470b22f5831b420f8964e0bf755f"
