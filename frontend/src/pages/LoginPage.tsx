@@ -47,7 +47,7 @@ function RiveAnimationSection() {
   return (
     <Box
       sx={{
-        flex: 2, // Give more space to left side (2:1 ratio)
+        flex: 1.5, // Balanced ratio - slightly left of center (1.5:1 ratio)
         display: { xs: 'none', md: 'flex' },
         alignItems: 'center',
         justifyContent: 'center',
@@ -61,8 +61,8 @@ function RiveAnimationSection() {
       <Box
         sx={{
           position: 'absolute',
-          top: 24,
-          left: 24,
+          top: 32,
+          left: 40,
           zIndex: 10,
         }}
       >
@@ -70,8 +70,9 @@ function RiveAnimationSection() {
           src="https://media.licdn.com/dms/image/v2/C5622AQGYuaZJu_FvbQ/feedshare-shrink_800/feedshare-shrink_800/0/1642346871207?e=2147483647&v=beta&t=-SwXfx6quNnav_rArAHPx4hn-IDAf9twjqSIAXz-MlA"
           alt="Tekion Logo"
           style={{
-            height: '48px',
+            height: '64px',
             width: 'auto',
+            filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1))',
           }}
         />
       </Box>
@@ -95,44 +96,6 @@ function RiveAnimationSection() {
             height: '100%',
           }}
         />
-      </Box>
-
-      {/* Catchy Text Overlay */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          px: 4,
-        }}
-      >
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 800,
-            mb: 1,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontFamily: '"Poppins", "Roboto", sans-serif',
-            letterSpacing: '-0.5px',
-          }}
-        >
-          TekLeader : Level Up Your Leadership
-        </Typography>
-        <Typography
-          variant="h6"
-          sx={{
-            color: '#2C3E50',
-            fontWeight: 500,
-            fontFamily: '"Poppins", "Roboto", sans-serif',
-          }}
-        >
-          Track. Compete. Excel.
-        </Typography>
       </Box>
     </Box>
   );
@@ -258,89 +221,192 @@ export default function LoginPage() {
       {/* Right Side - Login Form */}
       <Box
         sx={{
-          flex: 1, // Smaller flex ratio (2:1 with left side)
+          flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           p: 4,
-          bgcolor: '#F0F2F5', // Lighter background for right side
+          background: 'linear-gradient(135deg, #0B1220 0%, #12CFC3 100%)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 30% 50%, rgba(56, 200, 244, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(103, 221, 248, 0.1) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          },
         }}
       >
         <Card
           sx={{
-            maxWidth: 480,
+            maxWidth: 460,
             width: '100%',
             p: 5,
-            background: 'rgba(255, 255, 255, 0.98)',
+            background: 'rgba(248, 250, 255, 0.95)',
             backdropFilter: 'blur(20px)',
-            borderRadius: 4,
-            boxShadow: '0 30px 80px rgba(0, 0, 0, 0.3)',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
+            borderRadius: 3,
+            boxShadow: '0 20px 60px rgba(11, 18, 32, 0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+            position: 'relative',
+            zIndex: 1,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              boxShadow: '0 25px 70px rgba(11, 18, 32, 0.5)',
+              transform: 'translateY(-2px)',
+            },
           }}
         >
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#2C3E50', mb: 1 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              color: '#0B1220',
+              mb: 1,
+              fontSize: '1.5rem',
+              letterSpacing: '-0.5px',
+            }}
+          >
             {loginMode === 'admin' && 'Admin Login'}
             {loginMode === 'user' && 'User Login'}
             {loginMode === 'director' && 'Director Login'}
             {loginMode === 'functional-head' && 'Functional Head Login'}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {loginMode === 'admin' && 'Sign in to access admin dashboard'}
-            {loginMode === 'user' && 'Sign in with your SSO credentials'}
-            {loginMode === 'director' && 'Sign in to view your team hierarchy'}
-            {loginMode === 'functional-head' && 'Sign in to view organization hierarchy'}
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#0B1220',
+              opacity: 0.7,
+              fontSize: '0.875rem',
+            }}
+          >
+            {loginMode === 'admin' && 'Access admin dashboard'}
+            {loginMode === 'user' && 'Sign in with your credentials'}
+            {loginMode === 'director' && 'View your team hierarchy'}
+            {loginMode === 'functional-head' && 'View organization hierarchy'}
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 4 }}>
           <Button
-            variant={loginMode === 'user' ? 'contained' : 'text'}
+            variant={loginMode === 'user' ? 'contained' : 'outlined'}
             onClick={() => setLoginMode('user')}
             sx={{
-              py: 1.5,
+              py: 1.2,
               borderRadius: 2,
-              ...(loginMode === 'user' && {
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+              fontSize: '0.813rem',
+              fontWeight: 500,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              ...(loginMode === 'user' ? {
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                color: '#F8FAFF',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                },
+              } : {
+                borderColor: 'rgba(11, 18, 32, 0.2)',
+                color: '#0B1220',
+                '&:hover': {
+                  borderColor: '#12CFC3',
+                  background: 'rgba(18, 207, 195, 0.05)',
+                },
               }),
             }}
           >
             User
           </Button>
           <Button
-            variant={loginMode === 'admin' ? 'contained' : 'text'}
+            variant={loginMode === 'admin' ? 'contained' : 'outlined'}
             onClick={() => setLoginMode('admin')}
             sx={{
-              py: 1.5,
+              py: 1.2,
               borderRadius: 2,
-              ...(loginMode === 'admin' && {
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+              fontSize: '0.813rem',
+              fontWeight: 500,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              ...(loginMode === 'admin' ? {
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                color: '#F8FAFF',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                },
+              } : {
+                borderColor: 'rgba(11, 18, 32, 0.2)',
+                color: '#0B1220',
+                '&:hover': {
+                  borderColor: '#12CFC3',
+                  background: 'rgba(18, 207, 195, 0.05)',
+                },
               }),
             }}
           >
             Admin
           </Button>
           <Button
-            variant={loginMode === 'director' ? 'contained' : 'text'}
+            variant={loginMode === 'director' ? 'contained' : 'outlined'}
             onClick={() => setLoginMode('director')}
             sx={{
-              py: 1.5,
+              py: 1.2,
               borderRadius: 2,
-              ...(loginMode === 'director' && {
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+              fontSize: '0.813rem',
+              fontWeight: 500,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              ...(loginMode === 'director' ? {
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                color: '#F8FAFF',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                },
+              } : {
+                borderColor: 'rgba(11, 18, 32, 0.2)',
+                color: '#0B1220',
+                '&:hover': {
+                  borderColor: '#12CFC3',
+                  background: 'rgba(18, 207, 195, 0.05)',
+                },
               }),
             }}
           >
             Director
           </Button>
           <Button
-            variant={loginMode === 'functional-head' ? 'contained' : 'text'}
+            variant={loginMode === 'functional-head' ? 'contained' : 'outlined'}
             onClick={() => setLoginMode('functional-head')}
             sx={{
-              py: 1.5,
+              py: 1.2,
               borderRadius: 2,
-              ...(loginMode === 'functional-head' && {
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+              fontSize: '0.813rem',
+              fontWeight: 500,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              ...(loginMode === 'functional-head' ? {
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                color: '#F8FAFF',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                },
+              } : {
+                borderColor: 'rgba(11, 18, 32, 0.2)',
+                color: '#0B1220',
+                '&:hover': {
+                  borderColor: '#12CFC3',
+                  background: 'rgba(18, 207, 195, 0.05)',
+                },
               }),
             }}
           >
@@ -366,10 +432,18 @@ export default function LoginPage() {
                 mb: 2.5,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  backgroundColor: '#F5F7FA',
-                  '& fieldset': { borderColor: 'transparent' },
-                  '&:hover fieldset': { borderColor: '#00BFA5' },
-                  '&.Mui-focused fieldset': { borderColor: '#00BFA5' },
+                  fontSize: '0.875rem',
+                  backgroundColor: 'rgba(248, 250, 255, 0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& fieldset': { borderColor: 'rgba(11, 18, 32, 0.15)' },
+                  '&:hover fieldset': { borderColor: '#12CFC3' },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#12CFC3',
+                    borderWidth: '2px',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: '#FFFFFF',
+                  },
                 },
               }}
               required
@@ -381,21 +455,29 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               sx={{
-                mb: 3,
+                mb: 3.5,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  backgroundColor: '#F5F7FA',
-                  '& fieldset': { borderColor: 'transparent' },
-                  '&:hover fieldset': { borderColor: '#00BFA5' },
-                  '&.Mui-focused fieldset': { borderColor: '#00BFA5' },
+                  fontSize: '0.875rem',
+                  backgroundColor: 'rgba(248, 250, 255, 0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& fieldset': { borderColor: 'rgba(11, 18, 32, 0.15)' },
+                  '&:hover fieldset': { borderColor: '#12CFC3' },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#12CFC3',
+                    borderWidth: '2px',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: '#FFFFFF',
+                  },
                 },
               }}
               required
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                     </IconButton>
                   </InputAdornment>
                 ),
@@ -407,17 +489,20 @@ export default function LoginPage() {
               size="large"
               type="submit"
               sx={{
-                py: 1.8,
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
-                fontSize: '1rem',
+                py: 1.75,
+                borderRadius: 2.5,
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                fontSize: '0.875rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                boxShadow: '0 4px 15px rgba(0, 191, 165, 0.3)',
+                textTransform: 'none',
+                letterSpacing: '0.5px',
+                color: '#F8FAFF',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #00897B 0%, #004D40 100%)',
-                  boxShadow: '0 6px 20px rgba(0, 191, 165, 0.4)',
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                  transform: 'translateY(-1px)',
                 },
               }}
             >
@@ -429,13 +514,27 @@ export default function LoginPage() {
             <FormControl
               fullWidth
               sx={{
-                mb: 3,
+                mb: 2.5,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  backgroundColor: '#F5F7FA',
-                  '& fieldset': { borderColor: 'transparent' },
-                  '&:hover fieldset': { borderColor: '#00BFA5' },
-                  '&.Mui-focused fieldset': { borderColor: '#00BFA5' },
+                  fontSize: '0.875rem',
+                  backgroundColor: 'rgba(248, 250, 255, 0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& fieldset': { borderColor: 'rgba(11, 18, 32, 0.15)' },
+                  '&:hover fieldset': { borderColor: '#12CFC3' },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#12CFC3',
+                    borderWidth: '2px',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: '#FFFFFF',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '0.875rem',
+                  '&.Mui-focused': {
+                    color: '#12CFC3',
+                  },
                 },
               }}
             >
@@ -447,7 +546,7 @@ export default function LoginPage() {
                 required
               >
                 {directors.map((director) => (
-                  <MenuItem key={director} value={director}>
+                  <MenuItem key={director} value={director} sx={{ fontSize: '0.875rem' }}>
                     {director}
                   </MenuItem>
                 ))}
@@ -459,21 +558,24 @@ export default function LoginPage() {
               size="large"
               type="submit"
               sx={{
-                py: 1.8,
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
-                fontSize: '1rem',
+                py: 1.5,
+                borderRadius: 2.5,
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                fontSize: '0.875rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                boxShadow: '0 4px 15px rgba(0, 191, 165, 0.3)',
+                textTransform: 'none',
+                letterSpacing: '0.5px',
+                color: '#F8FAFF',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #00897B 0%, #004D40 100%)',
-                  boxShadow: '0 6px 20px rgba(0, 191, 165, 0.4)',
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                  transform: 'translateY(-1px)',
                 },
               }}
             >
-              <LoginIcon sx={{ mr: 1 }} />
+              <LoginIcon sx={{ mr: 1, fontSize: '1.1rem' }} />
               Login
             </Button>
           </Box>
@@ -482,13 +584,27 @@ export default function LoginPage() {
             <FormControl
               fullWidth
               sx={{
-                mb: 3,
+                mb: 2.5,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  backgroundColor: '#F5F7FA',
-                  '& fieldset': { borderColor: 'transparent' },
-                  '&:hover fieldset': { borderColor: '#00BFA5' },
-                  '&.Mui-focused fieldset': { borderColor: '#00BFA5' },
+                  fontSize: '0.875rem',
+                  backgroundColor: 'rgba(248, 250, 255, 0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& fieldset': { borderColor: 'rgba(11, 18, 32, 0.15)' },
+                  '&:hover fieldset': { borderColor: '#12CFC3' },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#12CFC3',
+                    borderWidth: '2px',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: '#FFFFFF',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '0.875rem',
+                  '&.Mui-focused': {
+                    color: '#12CFC3',
+                  },
                 },
               }}
             >
@@ -500,7 +616,7 @@ export default function LoginPage() {
                 required
               >
                 {functionalHeads.map((fh) => (
-                  <MenuItem key={fh} value={fh}>
+                  <MenuItem key={fh} value={fh} sx={{ fontSize: '0.875rem' }}>
                     {fh}
                   </MenuItem>
                 ))}
@@ -512,21 +628,24 @@ export default function LoginPage() {
               size="large"
               type="submit"
               sx={{
-                py: 1.8,
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
-                fontSize: '1rem',
+                py: 1.5,
+                borderRadius: 2.5,
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                fontSize: '0.875rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                boxShadow: '0 4px 15px rgba(0, 191, 165, 0.3)',
+                textTransform: 'none',
+                letterSpacing: '0.5px',
+                color: '#F8FAFF',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #00897B 0%, #004D40 100%)',
-                  boxShadow: '0 6px 20px rgba(0, 191, 165, 0.4)',
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                  transform: 'translateY(-1px)',
                 },
               }}
             >
-              <LoginIcon sx={{ mr: 1 }} />
+              <LoginIcon sx={{ mr: 1, fontSize: '1.1rem' }} />
               Login
             </Button>
           </Box>
@@ -539,13 +658,21 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{
-                mb: 3,
+                mb: 2.5,
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2,
-                  backgroundColor: '#F5F7FA',
-                  '& fieldset': { borderColor: 'transparent' },
-                  '&:hover fieldset': { borderColor: '#00BFA5' },
-                  '&.Mui-focused fieldset': { borderColor: '#00BFA5' },
+                  fontSize: '0.875rem',
+                  backgroundColor: 'rgba(248, 250, 255, 0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '& fieldset': { borderColor: 'rgba(11, 18, 32, 0.15)' },
+                  '&:hover fieldset': { borderColor: '#12CFC3' },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#12CFC3',
+                    borderWidth: '2px',
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: '#FFFFFF',
+                  },
                 },
               }}
               required
@@ -556,29 +683,41 @@ export default function LoginPage() {
               size="large"
               type="submit"
               sx={{
-                py: 1.8,
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
-                fontSize: '1rem',
+                py: 1.5,
+                borderRadius: 2.5,
+                background: 'linear-gradient(135deg, #12CFC3 0%, #0DB7AE 100%)',
+                fontSize: '0.875rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                boxShadow: '0 4px 15px rgba(0, 191, 165, 0.3)',
+                textTransform: 'none',
+                letterSpacing: '0.5px',
+                color: '#F8FAFF',
+                boxShadow: '0 4px 12px rgba(18, 207, 195, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #00897B 0%, #004D40 100%)',
-                  boxShadow: '0 6px 20px rgba(0, 191, 165, 0.4)',
+                  background: 'linear-gradient(135deg, #0DB7AE 0%, #12CFC3 100%)',
+                  boxShadow: '0 6px 16px rgba(18, 207, 195, 0.4)',
+                  transform: 'translateY(-1px)',
                 },
               }}
             >
-              <LoginIcon sx={{ mr: 1 }} />
+              <LoginIcon sx={{ mr: 1, fontSize: '1.1rem' }} />
               Login
             </Button>
           </Box>
         )}
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 4, borderColor: 'rgba(11, 18, 32, 0.1)' }} />
 
-        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', display: 'block' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            textAlign: 'center',
+            display: 'block',
+            color: '#0B1220',
+            opacity: 0.5,
+            fontSize: '0.75rem',
+          }}
+        >
           © 2026 Tekion. All rights reserved.
         </Typography>
         </Card>
