@@ -107,23 +107,9 @@ export default function Layout() {
             style={{
               height: '38px',
               width: 'auto',
-              marginBottom: '12px',
               filter: 'brightness(0) invert(1)', // Make logo white
             }}
           />
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 800,
-              letterSpacing: '0.5px',
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #E0E0E0 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            }}
-          >
-            TekLeader
-          </Typography>
         </Box>
 
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
@@ -252,7 +238,7 @@ export default function Layout() {
                 opacity: 0.95,
               }}
             >
-              Performance Progress Precision
+              Performance Progress Perseverance
             </Typography>
             <IconButton sx={{ color: 'white', mr: 1 }}>
               <NotificationsIcon />

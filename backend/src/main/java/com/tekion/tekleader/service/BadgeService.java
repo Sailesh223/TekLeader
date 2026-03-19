@@ -2,9 +2,11 @@ package com.tekion.tekleader.service;
 
 import com.tekion.tekleader.entity.BadgeAward;
 import com.tekion.tekleader.entity.BadgeDefinition;
+import com.tekion.tekleader.entity.Manager;
 import com.tekion.tekleader.entity.MonthlyMetric;
 import com.tekion.tekleader.repository.BadgeAwardRepository;
 import com.tekion.tekleader.repository.BadgeDefinitionRepository;
+import com.tekion.tekleader.repository.ManagerRepository;
 import com.tekion.tekleader.repository.MonthlyMetricRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +21,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class BadgeService {
-    
+
     private final BadgeDefinitionRepository badgeDefinitionRepository;
     private final BadgeAwardRepository badgeAwardRepository;
     private final MonthlyMetricRepository monthlyMetricRepository;
+    private final ManagerRepository managerRepository;
     
     @Transactional
     public void awardBadgesForMonth(String month) {
@@ -232,6 +235,46 @@ public class BadgeService {
 
         BadgeAward saved = badgeAwardRepository.save(award);
         log.info("Manual badge {} awarded to manager {} by {} for month {}", badgeCode, managerId, awardedBy, month);
+
+        return saved;
+    }
+
+    @Transactional
+    public BadgeAward awardPremiumBadge(String managerId, String month, String functionalHeadName, String reason) {
+        // Verify the manager belongs to the functional head's org
+        Manager manager = managerRepository.findById(managerId)
+            .orElseThrow(() -> new RuntimeException("Manager not found: " + managerId));
+
+        if (!functionalHeadName.equalsIgnoreCase(manager.getFunctionalHead())) {
+            throw new RuntimeException("Functional head can only award badges to their own organization members");
+        }
+
+        BadgeDefinition badge = badgeDefinitionRepository.findByCode("PREMIUM_BADGE")
+            .orElseThrow(() -> new RuntimeException("Premium badge not found"));
+
+        Optional<BadgeAward> existing = badgeAwardRepository
+            .findByManagerIdAndBadgeDefinitionIdAndMonth(managerId, badge.getId(), month);
+
+        if (existing.isPresent()) {
+            throw new RuntimeException("Premium badge already awarded to this manager for this month");
+        }
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("awardedBy", functionalHeadName);
+        metadata.put("reason", reason);
+        metadata.put("premium", true);
+        metadata.put("functionalHead", functionalHeadName);
+
+        BadgeAward award = BadgeAward.builder()
+            .managerId(managerId)
+            .badgeDefinitionId(badge.getId())
+            .month(month)
+            .metadata(metadata)
+            .build();
+
+        BadgeAward saved = badgeAwardRepository.save(award);
+        log.info("Premium badge awarded to manager {} by functional head {} for month {}",
+            managerId, functionalHeadName, month);
 
         return saved;
     }

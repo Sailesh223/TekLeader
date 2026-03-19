@@ -97,21 +97,21 @@ public class DataInitializer implements CommandLineRunner {
 
         log.info("Creating default badge definitions...");
 
-        BadgeDefinition oneOnOneChampion = BadgeDefinition.builder()
-                .code("ONE_ON_ONE_CHAMPION")
-                .name("1:1 Champion")
-                .description("100% utilization in the previous month")
-                .iconKey("trophy")
-                .color("#FFD700")
-                .active(true)
-                .build();
-
         BadgeDefinition streakStar = BadgeDefinition.builder()
                 .code("STREAK_STAR")
                 .name("Streak Star")
                 .description("2+ consecutive months with >80% utilization")
-                .iconKey("star")
-                .color("#FF6B6B")
+                .iconKey("frame1")
+                .color("#FFD86B")
+                .active(true)
+                .build();
+
+        BadgeDefinition oneOnOneChampion = BadgeDefinition.builder()
+                .code("ONE_ON_ONE_CHAMPION")
+                .name("1:1 Champion")
+                .description("100% utilization in the previous month")
+                .iconKey("frame2")
+                .color("#F2C94C")
                 .active(true)
                 .build();
 
@@ -119,24 +119,34 @@ public class DataInitializer implements CommandLineRunner {
                 .code("MOST_IMPROVED")
                 .name("Most Improved")
                 .description("Highest month-on-month improvement")
-                .iconKey("trending-up")
-                .color("#4ECDC4")
+                .iconKey("frame3")
+                .color("#FFD86B")
                 .active(true)
                 .build();
 
         BadgeDefinition heavyLifter = BadgeDefinition.builder()
                 .code("HEAVY_LIFTER")
                 .name("Heavy Lifter")
-                .description("Team size ≥7 with >80% utilization")
-                .iconKey("dumbbell")
-                .color("#95E1D3")
+                .description("Team size ≥5 with >80% utilization")
+                .iconKey("frame4")
+                .color("#C9971A")
                 .active(true)
                 .build();
 
-        badgeDefinitionRepository.save(oneOnOneChampion);
+        BadgeDefinition premiumBadge = BadgeDefinition.builder()
+                .code("PREMIUM_BADGE")
+                .name("Premium Badge")
+                .description("Awarded by Functional Head for exceptional performance")
+                .iconKey("frame5")
+                .color("#8AC4FF")
+                .active(true)
+                .build();
+
         badgeDefinitionRepository.save(streakStar);
+        badgeDefinitionRepository.save(oneOnOneChampion);
         badgeDefinitionRepository.save(mostImproved);
         badgeDefinitionRepository.save(heavyLifter);
+        badgeDefinitionRepository.save(premiumBadge);
 
         log.info("Default badge definitions created successfully");
     }
