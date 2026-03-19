@@ -54,7 +54,8 @@ function RiveAnimationSection() {
         position: 'relative',
         flexDirection: 'column',
         p: 0,
-        background: 'linear-gradient(180deg, #ECECEC 0%, #E0E0E0 50%, #ECECEC 100%)', // Light gradient to match Rive image bg
+        background: 'linear-gradient(135deg, #EAEAEA 0%, #EFEFEF 25%, #EDEDED 50%, #E9E9E9 75%, #ECECEC 100%)',
+        overflow: 'hidden',
       }}
     >
       {/* Tekion Logo at Top Left */}
