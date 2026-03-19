@@ -42,6 +42,7 @@ import { motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { bandColors } from '../theme';
 import OrgTreeView from '../components/OrgTreeView';
+import BadgeList from '../components/BadgeList';
 
 const MotionCard = motion(Card);
 
@@ -100,7 +101,7 @@ interface BadgeDefinition {
 }
 
 export default function FunctionalHeadDashboard() {
-  const { selectedMonth } = useStore();
+  const { selectedMonth, userInfo } = useStore();
   const [hierarchy, setHierarchy] = useState<FunctionalHeadNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,7 @@ export default function FunctionalHeadDashboard() {
   const [selectedBadge, setSelectedBadge] = useState('');
   const [badgeReason, setBadgeReason] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
+  const functionalHeadName = userInfo?.displayName || 'Unknown';
 
   useEffect(() => {
     if (selectedMonth) {
@@ -137,7 +139,9 @@ export default function FunctionalHeadDashboard() {
     try {
       const response = await fetch('/api/badges/available');
       const data = await response.json();
-      setAvailableBadges(data);
+      // Filter to only show Premium Badge (Frame 5) for functional heads
+      const premiumBadge = data.filter((badge: BadgeDefinition) => badge.code === 'PREMIUM_BADGE');
+      setAvailableBadges(premiumBadge);
     } catch (err) {
       console.error('Failed to load badges', err);
     }
@@ -145,6 +149,7 @@ export default function FunctionalHeadDashboard() {
 
   const handleAwardBadge = (manager: ManagerNode) => {
     setSelectedManager(manager);
+    setSelectedBadge('PREMIUM_BADGE'); // Auto-select Premium Badge for functional heads
     setBadgeDialogOpen(true);
   };
 
@@ -156,29 +161,41 @@ export default function FunctionalHeadDashboard() {
   };
 
   const handleSubmitBadge = async () => {
-    if (!selectedManager || !selectedBadge) return;
+    if (!selectedManager) return;
+
+    console.log('🎯 Awarding Premium Badge:', {
+      managerId: selectedManager.id,
+      month: selectedMonth,
+      functionalHeadName: functionalHeadName,
+      reason: badgeReason || 'Outstanding performance',
+    });
 
     try {
-      const response = await fetch('/api/badges/award', {
+      // Use premium badge endpoint for functional heads
+      const response = await fetch('/api/badges/award-premium', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           managerId: selectedManager.id,
-          badgeCode: selectedBadge,
           month: selectedMonth,
-          awardedBy: 'Functional Head',
-          reason: badgeReason,
+          functionalHeadName: functionalHeadName,
+          reason: badgeReason || 'Outstanding performance',
         }),
       });
 
-      if (response.ok) {
+      const result = await response.json();
+      console.log('📥 Response:', result);
+
+      if (response.ok && result.success) {
+        alert('Premium Badge (Frame 5) awarded successfully! ✨🏆');
         handleCloseBadgeDialog();
         loadHierarchy();
       } else {
-        alert('Failed to award badge');
+        alert(result.message || 'Failed to award badge. You can only award Premium Badge to managers in your organization.');
       }
     } catch (err) {
-      alert('Error awarding badge');
+      console.error('❌ Error awarding Premium Badge:', err);
+      alert('Error awarding Premium Badge: ' + err);
     }
   };
 
@@ -392,17 +409,9 @@ export default function FunctionalHeadDashboard() {
                                 Award Badge
                               </Button>
                             </Box>
-                            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                            <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                               {manager.badges.length > 0 ? (
-                                manager.badges.map((badge) => (
-                                  <Chip
-                                    key={badge.code}
-                                    label={badge.name}
-                                    size="small"
-                                    icon={<StarIcon sx={{ fontSize: 16 }} />}
-                                    sx={{ bgcolor: badge.color, color: '#fff' }}
-                                  />
-                                ))
+                                <BadgeList badges={manager.badges} size={48} spacing={1.5} />
                               ) : (
                                 <Typography variant="body2" color="text.secondary">
                                   No badges yet
@@ -445,30 +454,20 @@ export default function FunctionalHeadDashboard() {
       )}
 
       <Dialog open={badgeDialogOpen} onClose={handleCloseBadgeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Award Badge to {selectedManager?.displayName}</DialogTitle>
+        <DialogTitle>🏆 Award Premium Badge (Frame 5) to {selectedManager?.displayName}</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2, mb: 2 }}>
-            <InputLabel>Select Badge</InputLabel>
-            <Select
-              value={selectedBadge}
-              onChange={(e) => setSelectedBadge(e.target.value)}
-              label="Select Badge"
-            >
-              {availableBadges.map((badge) => (
-                <MenuItem key={badge.code} value={badge.code}>
-                  {badge.name} - {badge.description}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            As a Functional Head, you can only award the Premium Badge (Frame 5) to managers in your organization.
+          </Alert>
           <TextField
             fullWidth
             multiline
-            rows={3}
-            label="Reason (optional)"
+            rows={4}
+            label="Reason for Award"
             value={badgeReason}
             onChange={(e) => setBadgeReason(e.target.value)}
-            placeholder="Why are you awarding this badge?"
+            placeholder="Describe why this manager deserves the Premium Badge..."
+            sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
@@ -476,10 +475,14 @@ export default function FunctionalHeadDashboard() {
           <Button
             onClick={handleSubmitBadge}
             variant="contained"
-            disabled={!selectedBadge}
-            sx={{ bgcolor: '#00897B' }}
+            sx={{
+              bgcolor: '#FFD700',
+              color: '#000',
+              fontWeight: 600,
+              '&:hover': { bgcolor: '#FFC700' }
+            }}
           >
-            Award Badge
+            Award Premium Badge ✨
           </Button>
         </DialogActions>
       </Dialog>

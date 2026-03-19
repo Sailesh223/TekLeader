@@ -4,86 +4,38 @@
    ======================================== */
 
 /* ========================================
-   FRAME 1 - STREAK STAR
-   Floating animation
+   UNIFIED PULSE ANIMATION FOR FRAMES 1-4
+   Smooth, consistent pulse effect
    ======================================== */
-@keyframes championPulse {
+@keyframes badgePulse {
     0%, 100% {
+        transform: scale(1);
         filter: drop-shadow(0 0 10px rgba(255, 216, 107, 0.6));
-        transform: scale(1);
     }
     50% {
-        filter: drop-shadow(0 0 20px rgba(255, 216, 107, 1));
-        transform: scale(1.05);
-    }
-}
-
-.badge-champion {
-    animation: championPulse 2s ease-in-out infinite;
-}
-
-/* ========================================
-   FRAME 2 - ONE ON ONE CHAMPION
-   Bouncing animation
-   ======================================== */
-@keyframes shieldBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-@keyframes shieldShine {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.2) drop-shadow(0 0 15px rgba(242, 201, 76, 0.8)); }
-}
-
-.badge-shield {
-    animation: shieldBounce 2.5s ease-in-out infinite, shieldShine 3s ease-in-out infinite;
-}
-
-/* ========================================
-   FRAME 3 - ON THE RISE
-   Data pulse animation
-   ======================================== */
-@keyframes dataPulse {
-    0%, 100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 8px rgba(255, 216, 107, 0.4));
-    }
-    25% {
         transform: scale(1.08);
-        filter: drop-shadow(0 0 18px rgba(255, 216, 107, 0.9));
-    }
-    50% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 8px rgba(255, 216, 107, 0.4));
-    }
-    75% {
-        transform: scale(1.03);
-        filter: drop-shadow(0 0 15px rgba(255, 216, 107, 0.7));
+        filter: drop-shadow(0 0 20px rgba(255, 216, 107, 1));
     }
 }
 
+/* FRAME 1 - STREAK STAR */
+.badge-champion {
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* FRAME 2 - ONE ON ONE CHAMPION */
+.badge-shield {
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* FRAME 3 - MOST IMPROVED */
 .badge-analytics {
-    animation: dataPulse 3s ease-in-out infinite;
+    animation: badgePulse 2s ease-in-out infinite;
 }
 
-/* ========================================
-   FRAME 4 - HEAVY LIFTER
-   Pulsing glow animation
-   ======================================== */
-@keyframes premiumPulse {
-    0%, 100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 10px rgba(201, 151, 26, 0.5));
-    }
-    50% {
-        transform: scale(1.15);
-        filter: drop-shadow(0 0 25px rgba(201, 151, 26, 1));
-    }
-}
-
-.badge-premium img {
-    animation: premiumPulse 2s ease-in-out infinite;
+/* FRAME 4 - HEAVY LIFTER */
+.badge-premium {
+    animation: badgePulse 2s ease-in-out infinite;
 }
 
 /* ========================================

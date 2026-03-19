@@ -37,6 +37,8 @@ import AchievementModal from '../components/AchievementModal';
 import UserAvatar from '../components/UserAvatar';
 import AvatarPicker from '../components/AvatarPicker';
 import { getStorageKey } from '../utils/avatarGenerator';
+import Badge from '../components/Badge';
+import BadgeList from '../components/BadgeList';
 
 const MotionCard = motion(Card);
 
@@ -667,20 +669,14 @@ export default function PersonalDashboard() {
                     />
                   </Grid>
                   <Grid item xs={12} sm={3}>
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      {perf.badges.map((badge) => (
-                        <Chip
-                          key={badge.id}
-                          label={badge.code}
-                          size="small"
-                          icon={<StarIcon sx={{ fontSize: 16 }} />}
-                          sx={{
-                            bgcolor: badge.color || '#FF9800',
-                            color: '#fff',
-                            fontSize: '0.7rem',
-                          }}
-                        />
-                      ))}
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                      {perf.badges.length > 0 ? (
+                        <BadgeList badges={perf.badges} size={40} spacing={1.5} />
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          No badges
+                        </Typography>
+                      )}
                     </Box>
                   </Grid>
                 </Grid>
@@ -817,21 +813,29 @@ export default function PersonalDashboard() {
           <Typography variant="h5" sx={{ fontWeight: 700, color: '#00897B', mb: 3 }}>
             🏅 Your Badges ({allBadges.length})
           </Typography>
-          <Grid container spacing={2} sx={{ mb: 4 }}>
+          <Grid container spacing={3} sx={{ mb: 4 }}>
             {allBadges.map((badge) => (
               <Grid item xs={6} sm={4} md={3} key={badge.id}>
                 <MotionCard
                   whileHover={{ scale: 1.05 }}
                   sx={{
-                    background: `linear-gradient(135deg, ${badge.color}20 0%, rgba(255, 255, 255, 0.98) 100%)`,
-                    border: `2px solid ${badge.color}40`,
-                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, rgba(0, 137, 123, 0.05) 0%, rgba(255, 255, 255, 0.98) 100%)',
+                    border: '2px solid rgba(0, 137, 123, 0.2)',
+                    borderRadius: 3,
                     textAlign: 'center',
+                    p: 2,
                   }}
                 >
                   <CardContent>
-                    <StarIcon sx={{ fontSize: 48, color: badge.color, mb: 1 }} />
-                    <Typography variant="body1" sx={{ fontWeight: 700, color: '#00897B' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                      <Badge
+                        code={badge.code}
+                        name={badge.name}
+                        size={72}
+                        showTooltip={false}
+                      />
+                    </Box>
+                    <Typography variant="body1" sx={{ fontWeight: 700, color: '#00897B', mb: 0.5 }}>
                       {badge.name}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#999' }}>

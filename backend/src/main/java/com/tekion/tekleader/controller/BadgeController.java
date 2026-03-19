@@ -47,6 +47,30 @@ public class BadgeController {
         }
     }
 
+    @PostMapping("/award-premium")
+    @Operation(summary = "Award premium badge", description = "Award premium badge (Frame 5) by functional head to their org members only")
+    public ResponseEntity<Map<String, Object>> awardPremiumBadge(@RequestBody Map<String, String> request) {
+        try {
+            BadgeAward award = badgeService.awardPremiumBadge(
+                request.get("managerId"),
+                request.get("month"),
+                request.get("functionalHeadName"),
+                request.get("reason")
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "success", true,
+                "message", "Premium badge awarded successfully",
+                "award", award
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
     @GetMapping("/available")
     @Operation(summary = "Get available badges", description = "Get all active badge definitions")
     public ResponseEntity<List<BadgeDefinition>> getAvailableBadges() {

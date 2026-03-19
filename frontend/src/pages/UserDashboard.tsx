@@ -29,6 +29,7 @@ import { leaderboardApi, ManagerEntry } from '../api/client';
 import { useStore } from '../store/useStore';
 import { bandColors } from '../theme';
 import UserAvatar from '../components/UserAvatar';
+import BadgeList from '../components/BadgeList';
 import {
   EmojiEvents as TrophyIcon,
   Star as StarIcon,
@@ -750,25 +751,20 @@ export default function UserDashboard() {
 
                             {manager.badges.length > 0 && (
                               <Grid item xs={12}>
-                                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default' }}>
-                                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                    Badges Earned
+                                <Paper
+                                  elevation={0}
+                                  sx={{
+                                    p: 3,
+                                    background: 'rgba(0, 191, 165, 0.05)',
+                                    border: '1px solid rgba(0, 191, 165, 0.2)',
+                                    borderRadius: 2,
+                                  }}
+                                >
+                                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#00BFA5', mb: 2 }}>
+                                    🏆 Badges Earned
                                   </Typography>
-                                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                                    {manager.badges.map((badge) => {
-                                      const IconComponent = getBadgeIcon(badge.iconKey);
-                                      return (
-                                        <Chip
-                                          key={badge.id}
-                                          icon={<IconComponent />}
-                                          label={badge.name}
-                                          sx={{
-                                            bgcolor: badge.color,
-                                            color: '#fff',
-                                          }}
-                                        />
-                                      );
-                                    })}
+                                  <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <BadgeList badges={manager.badges} size={48} spacing={1.5} />
                                   </Box>
                                 </Paper>
                               </Grid>
