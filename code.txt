@@ -1,0 +1,1938 @@
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  Chip,
+  keyframes,
+  alpha,
+  Divider,
+} from '@mui/material';
+import {
+  TrendingUp as TrendingUpIcon,
+  People as PeopleIcon,
+  EmojiEvents as TrophyIcon,
+  Timeline as TimelineIcon,
+  AutoAwesome as SparkleIcon,
+  Shield as ShieldIcon,
+  LocalFireDepartment as FireIcon,
+  WorkspacePremium as PremiumIcon,
+  Speed as SpeedIcon,
+  Insights as InsightsIcon,
+  CalendarMonth as CalendarIcon,
+} from '@mui/icons-material';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+} from 'recharts';
+import { leaderboardApi } from '../api/client';
+
+// ─── Keyframes ──────────────────────────────────────────────
+const float = keyframes`
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+`;
+
+const shimmer = keyframes`
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+`;
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+`;
+
+const slideUp = keyframes`
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+`;
+
+const glow = keyframes`
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(0,191,165,0.4)); }
+  50% { filter: drop-shadow(0 0 20px rgba(0,191,165,0.8)); }
+`;
+
+const rotate = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const countUp = keyframes`
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+`;
+
+// ─── Circular Progress Ring Component ───────────────────────
+interface ProgressRingProps {
+  value: number;
+  max: number;
+  size?: number;
+  strokeWidth?: number;
+  color: string;
+  glowColor: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+function ProgressRing({
+  value,
+  max,
+  size = 120,
+  strokeWidth = 8,
+  color,
+  glowColor,
+  label,
+  icon,
+}: ProgressRingProps) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const percent = Math.min((value / max) * 100, 100);
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  return (
+    <Box sx={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box sx={{ position: 'relative', width: size, height: size }}>
+        {/* Background glow */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: -4,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${glowColor}20 0%, transparent 70%)`,
+          }}
+        />
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          {/* Track */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth={strokeWidth}
+          />
+          {/* Progress */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={`url(#ring-gradient-${label.replace(/\s/g, '')})`}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            style={{
+              transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              filter: `drop-shadow(0 0 6px ${glowColor}80)`,
+            }}
+          />
+          <defs>
+            <linearGradient id={`ring-gradient-${label.replace(/\s/g, '')}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={color} />
+              <stop offset="100%" stopColor={glowColor} />
+            </linearGradient>
+          </defs>
+        </svg>
+        {/* Center content */}
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box sx={{ color: color, mb: 0.3 }}>{icon}</Box>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              fontSize: '1.3rem',
+              color: '#fff',
+              lineHeight: 1,
+              animation: `${countUp} 0.8s ease-out`,
+            }}
+          >
+            {typeof value === 'number' && value % 1 !== 0 ? value.toFixed(1) : value}
+          </Typography>
+        </Box>
+      </Box>
+      <Typography
+        sx={{
+          mt: 1,
+          fontSize: '0.7rem',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '1.5px',
+          color: color,
+        }}
+      >
+        {label}
+      </Typography>
+    </Box>
+  );
+}
+
+// ─── Custom Dark Tooltip ────────────────────────────────────
+function CustomTooltip({ active, payload, label, accentColor = '#00BFA5' }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <Box
+      sx={{
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        border: `1px solid ${accentColor}60`,
+        borderRadius: 2,
+        p: 1.5,
+        boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 20px ${accentColor}20`,
+        backdropFilter: 'blur(20px)',
+        minWidth: 150,
+      }}
+    >
+      <Typography sx={{ fontWeight: 700, color: accentColor, fontSize: '0.8rem', mb: 0.5 }}>
+        {label}
+      </Typography>
+      {payload.map((entry: any, i: number) => (
+        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', background: entry.color, boxShadow: `0 0 6px ${entry.color}` }} />
+          <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }}>
+            {entry.name}:
+          </Typography>
+          <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '0.75rem' }}>
+            {entry.value}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+// ─── Custom Legend ────────────────────────────────────────────
+function CustomLegend({ payload }: any) {
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2.5, mt: 2, flexWrap: 'wrap' }}>
+      {payload?.map((entry: any, i: number) => (
+        <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: entry.color,
+              boxShadow: `0 0 8px ${entry.color}80`,
+            }}
+          />
+          <Typography sx={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.72rem', fontWeight: 600 }}>
+            {entry.value}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+// ─── Chart Card Wrapper ──────────────────────────────────────
+interface ChartCardProps {
+  title: string;
+  emoji: string;
+  subtitle?: string;
+  accentColor?: string;
+  children: React.ReactNode;
+  delay?: number;
+}
+
+function ChartCard({ title, emoji, subtitle, accentColor = '#00BFA5', children, delay = 0 }: ChartCardProps) {
+  return (
+    <Card
+      sx={{
+        borderRadius: 4,
+        overflow: 'hidden',
+        background: 'linear-gradient(160deg, #0f1629 0%, #1a1f3a 50%, #0d1321 100%)',
+        border: `1px solid ${accentColor}20`,
+        boxShadow: `0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 ${accentColor}10`,
+        animation: `$${slideUp} $${0.6 + delay * 0.1}s ease-out`,
+        transition: 'all 0.4s ease',
+        position: 'relative',
+        '&:hover': {
+          border: `1px solid ${accentColor}40`,
+          boxShadow: `0 12px 48px rgba(0,0,0,0.4), 0 0 30px ${accentColor}10`,
+          transform: 'translateY(-4px)',
+        },
+      }}
+    >
+      {/* Top glow bar */}
+      <Box
+        sx={{
+          height: 3,
+          background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
+          boxShadow: `0 0 15px ${accentColor}50`,
+        }}
+      />
+
+      {/* Corner decoration */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 3,
+          right: 0,
+          width: 80,
+          height: 80,
+          background: `radial-gradient(circle at top right, ${accentColor}08 0%, transparent 70%)`,
+          pointerEvents: 'none',
+        }}
+      />
+
+      <CardContent sx={{ p: 3 }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: `${accentColor}15`,
+                border: `1px solid ${accentColor}30`,
+                fontSize: '1.2rem',
+              }}
+            >
+              {emoji}
+            </Box>
+            <Box>
+              <Typography
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '1rem',
+                  color: '#fff',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                {title}
+              </Typography>
+              {subtitle && (
+                <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', mt: 0.2 }}>
+                  {subtitle}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          <Chip
+            size="small"
+            label="LIVE"
+            sx={{
+              fontSize: '0.6rem',
+              fontWeight: 800,
+              height: 22,
+              background: `${accentColor}20`,
+              color: accentColor,
+              border: `1px solid ${accentColor}40`,
+              letterSpacing: '1px',
+              '& .MuiChip-label': { px: 1 },
+            }}
+          />
+        </Box>
+
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Donut Center Label ──────────────────────────────────────
+function DonutCenterLabel({ viewBox, value, label }: any) {
+  const { cx, cy } = viewBox;
+  return (
+    <g>
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="#fff" fontWeight="900" fontSize="28">
+        {value}
+      </text>
+      <text x={cx} y={cy + 14} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontWeight="600" fontSize="11">
+        {label}
+      </text>
+    </g>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ══════════════════════════════════════════════════════════════
+export default function AnalyticsPage() {
+  const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+  const [stats, setStats] = useState({
+    totalManagers: 0,
+    avgScore: 0,
+    goldCount: 0,
+    silverCount: 0,
+    bronzeCount: 0,
+    ignitionCount: 0,
+  });
+  const [utilizationData, setUtilizationData] = useState<any[]>([]);
+  const [bandTrendData, setBandTrendData] = useState<any[]>([]);
+  const [scoreTrendData, setScoreTrendData] = useState<any[]>([]);
+  const [badgeTrendData, setBadgeTrendData] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadMonths();
+  }, []);
+
+  useEffect(() => {
+    if (selectedMonth) loadAnalytics();
+  }, [selectedMonth]);
+
+  useEffect(() => {
+    if (availableMonths.length > 0) loadHistoricalData();
+  }, [availableMonths]);
+
+  const loadMonths = async () => {
+    try {
+      const response = await leaderboardApi.getAvailableMonths();
+      setAvailableMonths(response.months);
+      if (response.latestMonth) setSelectedMonth(response.latestMonth);
+    } catch (error) {
+      console.error('Failed to load months:', error);
+    }
+  };
+
+  const loadHistoricalData = async () => {
+    try {
+      const historicalBandData: any[] = [];
+      const historicalScoreData: any[] = [];
+      const historicalBadgeData: any[] = [];
+
+      for (const month of availableMonths) {
+        const response = await leaderboardApi.getLeaderboard(month, 'all', 'all', '', 0, 1000);
+        const managers = response.managers;
+
+        const goldCount = managers.filter((m) => m.classificationBand === 'Gold').length;
+        const silverCount = managers.filter((m) => m.classificationBand === 'Silver').length;
+        const bronzeCount = managers.filter((m) => m.classificationBand === 'Bronze').length;
+        const ignitionCount = managers.filter((m) => m.classificationBand === 'Ignition Zone').length;
+        const avgScore = managers.reduce((sum, m) => sum + m.finalScore, 0) / managers.length;
+        const totalBadges = managers.reduce((sum, m) => sum + (m.badges?.length || 0), 0);
+
+        historicalBandData.push({ month, Gold: goldCount, Silver: silverCount, Bronze: bronzeCount, 'Ignition Zone': ignitionCount });
+        historicalScoreData.push({ month, avgScore: Math.round(avgScore * 100) / 100 });
+        historicalBadgeData.push({ month, totalBadges });
+      }
+
+      setBandTrendData(historicalBandData);
+      setScoreTrendData(historicalScoreData);
+      setBadgeTrendData(historicalBadgeData);
+    } catch (error) {
+      console.error('Failed to load historical data:', error);
+    }
+  };
+
+  const loadAnalytics = async () => {
+    setLoading(true);
+    try {
+      const response = await leaderboardApi.getLeaderboard(selectedMonth, 'all', 'all', '', 0, 1000);
+      const managers = response.managers;
+      const totalManagers = managers.length;
+      const avgScore = managers.reduce((sum, m) => sum + m.finalScore, 0) / totalManagers;
+
+      const goldCount = managers.filter((m) => m.classificationBand === 'Gold').length;
+      const silverCount = managers.filter((m) => m.classificationBand === 'Silver').length;
+      const bronzeCount = managers.filter((m) => m.classificationBand === 'Bronze').length;
+      const ignitionCount = managers.filter((m) => m.classificationBand === 'Ignition Zone').length;
+
+      setStats({ totalManagers, avgScore: Math.round(avgScore * 100) / 100, goldCount, silverCount, bronzeCount, ignitionCount });
+
+      const utilizationRanges = [
+        { range: '0-20%', count: 0, color: '#FF6B6B', glow: '#FF6B6B' },
+        { range: '21-40%', count: 0, color: '#FFA726', glow: '#FFA726' },
+        { range: '41-60%', count: 0, color: '#FFEE58', glow: '#FFEE58' },
+        { range: '61-80%', count: 0, color: '#66BB6A', glow: '#66BB6A' },
+        { range: '81-100%', count: 0, color: '#00BFA5', glow: '#00BFA5' },
+      ];
+
+      managers.forEach((m) => {
+        const util = m.utilization;
+        if (util <= 20) utilizationRanges[0].count++;
+        else if (util <= 40) utilizationRanges[1].count++;
+        else if (util <= 60) utilizationRanges[2].count++;
+        else if (util <= 80) utilizationRanges[3].count++;
+        else utilizationRanges[4].count++;
+      });
+
+      setUtilizationData(utilizationRanges.filter((r) => r.count > 0));
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Band colors map
+  const BAND_COLORS = {
+    Gold: { main: '#FFD700', glow: '#FFC107' },
+    Silver: { main: '#78909C', glow: '#90A4AE' },
+    Bronze: { main: '#FF8A65', glow: '#FFAB91' },
+    'Ignition Zone': { main: '#EF5350', glow: '#E57373' },
+  };
+
+  // Donut data
+  const donutData = [
+    { name: 'Gold', value: stats.goldCount, color: '#FFD700' },
+    { name: 'Silver', value: stats.silverCount, color: '#78909C' },
+    { name: 'Bronze', value: stats.bronzeCount, color: '#FF8A65' },
+    { name: 'Ignition', value: stats.ignitionCount, color: '#EF5350' },
+  ].filter((d) => d.value > 0);
+
+  return (
+    <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+      {/* ═══ HEADER ═══ */}
+      <Box sx={{ mb: 4, animation: `${slideUp} 0.5s ease-out` }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+          <InsightsIcon sx={{ fontSize: 36, color: '#00BFA5', animation: `${glow} 3s ease-in-out infinite` }} />
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, #00695C 0%, #00BFA5 50%, #00E5FF 100%)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              animation: `${shimmer} 4s linear infinite`,
+              letterSpacing: '1px',
+            }}
+          >
+            Analytics Command
+          </Typography>
+        </Box>
+        <Typography sx={{ color: '#00897B', fontWeight: 500, fontSize: '0.95rem' }}>
+          Deep-dive into performance metrics, trends & battle-season insights
+        </Typography>
+      </Box>
+
+      {/* ═══ MONTH SELECTOR ═══ */}
+      <Box
+        sx={{
+          mb: 4,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 2,
+          p: 2,
+          px: 3,
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #0f1629 0%, #1a1f3a 100%)',
+          border: '1px solid rgba(0,191,165,0.2)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          animation: `${slideUp} 0.6s ease-out`,
+        }}
+      >
+        <CalendarIcon sx={{ color: '#00BFA5', fontSize: 22 }} />
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel
+            sx={{
+              color: 'rgba(255,255,255,0.5)',
+              '&.Mui-focused': { color: '#00BFA5' },
+            }}
+          >
+            Select Month
+          </InputLabel>
+          <Select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            label="Select Month"
+            sx={{
+              color: '#fff',
+              fontWeight: 700,
+              '.MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(0,191,165,0.3)',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(0,191,165,0.5)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#00BFA5',
+              },
+              '.MuiSvgIcon-root': { color: '#00BFA5' },
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  background: '#1a1f3a',
+                  border: '1px solid rgba(0,191,165,0.2)',
+                  '& .MuiMenuItem-root': {
+                    color: '#fff',
+                    '&:hover': { background: 'rgba(0,191,165,0.15)' },
+                    '&.Mui-selected': { background: 'rgba(0,191,165,0.25)' },
+                  },
+                },
+              },
+            }}
+          >
+            {availableMonths.map((month) => (
+              <MenuItem key={month} value={month}>
+                {month}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      {loading ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 2 }}>
+          <Box sx={{ position: 'relative' }}>
+            <CircularProgress size={60} sx={{ color: '#00BFA5' }} />
+            <Box
+              sx={{
+                position: 'absolute',
+                inset: -10,
+                borderRadius: '50%',
+                border: '2px solid rgba(0,191,165,0.1)',
+                animation: `${rotate} 3s linear infinite`,
+              }}
+            />
+          </Box>
+          <Typography sx={{ color: '#00897B', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.8rem' }}>
+            Loading Analytics...
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          {/* ═══ STATS ROW — CIRCULAR RINGS ═══ */}
+          <Box
+            sx={{
+              mb: 4,
+              p: 4,
+              borderRadius: 4,
+              background: 'linear-gradient(160deg, #0f1629 0%, #1a1f3a 50%, #0d1321 100%)',
+              border: '1px solid rgba(0,191,165,0.15)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
+              animation: `${slideUp} 0.7s ease-out`,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Background decoration */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 300,
+                height: 300,
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(0,191,165,0.05) 0%, transparent 70%)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontWeight: 800,
+                fontSize: '0.75rem',
+                textTransform: 'uppercase',
+                letterSpacing: '3px',
+                color: '#00BFA5',
+                mb: 3,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <SpeedIcon sx={{ fontSize: 18 }} />
+              Performance Overview — {selectedMonth}
+            </Typography>
+
+            <Grid container spacing={3} justifyContent="center" alignItems="center">
+              <Grid item xs={6} sm={4} md={2} sx={{ textAlign: 'center' }}>
+                <ProgressRing
+                  value={stats.totalManagers}
+                  max={100}
+                  color="#00BFA5"
+                  glowColor="#00E5FF"
+                  label="Managers"
+                  icon={<PeopleIcon sx={{ fontSize: 20 }} />}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={2} sx={{ textAlign: 'center' }}>
+                <ProgressRing
+                  value={stats.avgScore}
+                  max={100}
+                  color="#7C4DFF"
+                  glowColor="#B388FF"
+                  label="Avg Score"
+                  icon={<TrendingUpIcon sx={{ fontSize: 20 }} />}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={2} sx={{ textAlign: 'center' }}>
+                <ProgressRing
+                  value={stats.goldCount}
+                  max={stats.totalManagers || 1}
+                  color="#FFD700"
+                  glowColor="#FFAB00"
+                  label="Gold"
+                  icon={<TrophyIcon sx={{ fontSize: 20 }} />}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={2} sx={{ textAlign: 'center' }}>
+                <ProgressRing
+                  value={stats.silverCount}
+                  max={stats.totalManagers || 1}
+                  color="#78909C"
+                  glowColor="#B0BEC5"
+                  label="Silver"
+                  icon={<ShieldIcon sx={{ fontSize: 20 }} />}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={2} sx={{ textAlign: 'center' }}>
+                <ProgressRing
+                  value={stats.bronzeCount}
+                  max={stats.totalManagers || 1}
+                  color="#FF8A65"
+                  glowColor="#FFAB91"
+                  label="Bronze"
+                  icon={<PremiumIcon sx={{ fontSize: 20 }} />}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4} md={2} sx={{ textAlign: 'center' }}>
+                <ProgressRing
+                  value={stats.ignitionCount}
+                  max={stats.totalManagers || 1}
+                  color="#EF5350"
+                  glowColor="#E57373"
+                  label="Ignition"
+                  icon={<FireIcon sx={{ fontSize: 20 }} />}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* ═══ CHARTS GRID ═══ */}
+          {stats.totalManagers > 0 && (
+            <Grid container spacing={3}>
+              {/* ── Donut Chart: Band Distribution ── */}
+              <Grid item xs={12} md={5}>
+                <ChartCard title="Band Distribution" emoji="🎯" subtitle="Current month breakdown" accentColor="#7C4DFF" delay={1}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <PieChart>
+                      <defs>
+                        {donutData.map((entry, i) => (
+                          <linearGradient key={i} id={`donut-grad-${i}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                            <stop offset="100%" stopColor={entry.color} stopOpacity={0.6} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <Pie
+                        data={donutData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={75}
+                        outerRadius={110}
+                        paddingAngle={4}
+                        dataKey="value"
+                        stroke="none"
+                        animationBegin={200}
+                        animationDuration={1200}
+                      >
+                        {donutData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={`url(#donut-grad-${index})`}
+                            style={{
+                              filter: `drop-shadow(0 0 8px ${entry.color}60)`,
+                              cursor: 'pointer',
+                            }}
+                          />
+                        ))}
+                        <DonutCenterLabel viewBox={{ cx: 200, cy: 160 }} value={stats.totalManagers} label="TOTAL" />
+                      </Pie>
+                      <Tooltip content={<CustomTooltip accentColor="#7C4DFF" />} />
+                      <Legend content={<CustomLegend />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  {/* Band breakdown mini stats */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, px: 1 }}>
+                    {donutData.map((band, i) => (
+                      <Box key={i} sx={{ textAlign: 'center' }}>
+                        <Typography
+                          sx={{
+                            fontWeight: 900,
+                            fontSize: '1.2rem',
+                            color: band.color,
+                            textShadow: `0 0 10px ${band.color}40`,
+                          }}
+                        >
+                          {band.value}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            color: 'rgba(255,255,255,0.4)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                          }}
+                        >
+                          {band.name}
+                        </Typography>
+                        <Box
+                          sx={{
+                            mt: 0.5,
+                            height: 3,
+                            width: 40,
+                            mx: 'auto',
+                            borderRadius: 2,
+                            background: `linear-gradient(90deg, ${band.color}, transparent)`,
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                </ChartCard>
+              </Grid>
+
+              {/* ── Bar Chart: Manager Count by Band ── */}
+              <Grid item xs={12} md={7}>
+                <ChartCard title="Manager Count by Band" emoji="📊" subtitle="Comparative band analysis" accentColor="#00BFA5" delay={2}>
+                  <ResponsiveContainer width="100%" height={380}>
+                    <BarChart
+                      data={[
+                        { band: 'Gold', count: stats.goldCount, fill: '#FFD700' },
+                        { band: 'Silver', count: stats.silverCount, fill: '#78909C' },
+                        { band: 'Bronze', count: stats.bronzeCount, fill: '#FF8A65' },
+                        { band: 'Ignition', count: stats.ignitionCount, fill: '#EF5350' },
+                      ]}
+                      barCategoryGap="25%"
+                    >
+                      <defs>
+                        <linearGradient id="barGold" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#FFD700" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#FF8F00" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="barSilver" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#B0BEC5" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#546E7A" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="barBronze" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#FFAB91" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#E64A19" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="barIgnition" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#EF5350" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#B71C1C" stopOpacity={0.7} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                      <XAxis
+                        dataKey="band"
+                        stroke="rgba(255,255,255,0.3)"
+                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600 }}
+                        axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                      />
+                      <YAxis
+                        stroke="rgba(255,255,255,0.3)"
+                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                        axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip content={<CustomTooltip accentColor="#00BFA5" />} />
+                      <Bar dataKey="count" radius={[8, 8, 0, 0]} animationDuration={1500}>
+                        <Cell fill="url(#barGold)" />
+                        <Cell fill="url(#barSilver)" />
+                        <Cell fill="url(#barBronze)" />
+                        <Cell fill="url(#barIgnition)" />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </Grid>
+
+              {/* ── Utilization Distribution ── */}
+              {utilizationData.length > 0 && (
+                <Grid item xs={12}>
+                  <ChartCard
+                    title="Utilization Distribution"
+                    emoji="⚡"
+                    subtitle="Team engagement heatmap by utilization ranges"
+                    accentColor="#00E5FF"
+                    delay={3}
+                  >
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={utilizationData} barCategoryGap="20%">
+                        <defs>
+                          {utilizationData.map((entry, i) => (
+                            <linearGradient key={i} id={`utilBar-${i}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                              <stop offset="100%" stopColor={entry.color} stopOpacity={0.4} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis
+                          dataKey="range"
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                        />
+                        <YAxis
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                          allowDecimals={false}
+                          label={{
+                            value: 'Managers',
+                            angle: -90,
+                            position: 'insideLeft',
+                            style: { fill: 'rgba(255,255,255,0.3)', fontSize: 11 },
+                          }}
+                        />
+                        <Tooltip content={<CustomTooltip accentColor="#00E5FF" />} />
+                        <Bar dataKey="count" radius={[10, 10, 0, 0]} animationDuration={1800}>
+                          {utilizationData.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={`url(#utilBar-${index})`}
+                              style={{ filter: `drop-shadow(0 0 6px ${entry.color}40)` }}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                    {/* Color legend strip */}
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5, mt: 2 }}>
+                      {['#FF6B6B', '#FFA726', '#FFEE58', '#66BB6A', '#00BFA5'].map((color, i) => (
+                        <Box key={i} sx={{ flex: 1, maxWidth: 80 }}>
+                          <Box sx={{ height: 4, borderRadius: 2, background: color, boxShadow: `0 0 8px ${color}50` }} />
+                        </Box>
+                      ))}
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5, px: 2 }}>
+                      <Typography sx={{ fontSize: '0.6rem', color: '#FF6B6B', fontWeight: 700 }}>LOW</Typography>
+                      <Typography sx={{ fontSize: '0.6rem', color: '#00BFA5', fontWeight: 700 }}>HIGH</Typography>
+                    </Box>
+                  </ChartCard>
+                </Grid>
+              )}
+
+              {/* ── Band Distribution Trend (Area Chart) ── */}
+              {bandTrendData.length > 0 && (
+                <Grid item xs={12}>
+                  <ChartCard
+                    title="Band Distribution Trend"
+                    emoji="🌊"
+                    subtitle="Track band migration across battle seasons"
+                    accentColor="#E040FB"
+                    delay={4}
+                  >
+                    <ResponsiveContainer width="100%" height={380}>
+                      <AreaChart data={bandTrendData}>
+                        <defs>
+                          <linearGradient id="trendGold" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#FFD700" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#FFD700" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="trendSilver" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#78909C" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#78909C" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="trendBronze" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#FF8A65" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#FF8A65" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="trendIgnition" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#EF5350" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#EF5350" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis
+                          dataKey="month"
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                        />
+                        <YAxis
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                          allowDecimals={false}
+                          label={{
+                            value: 'Managers',
+                            angle: -90,
+                            position: 'insideLeft',
+                            style: { fill: 'rgba(255,255,255,0.3)', fontSize: 11 },
+                          }}
+                        />
+                        <Tooltip content={<CustomTooltip accentColor="#E040FB" />} />
+                        <Legend content={<CustomLegend />} />
+                        <Area
+                          type="monotone"
+                          dataKey="Gold"
+                          stroke="#FFD700"
+                          strokeWidth={3}
+                          fill="url(#trendGold)"
+                          dot={{ fill: '#FFD700', r: 4, strokeWidth: 2, stroke: '#1a1f3a' }}
+                          activeDot={{
+                            r: 7,
+                            fill: '#FFD700',
+                            stroke: '#1a1f3a',
+                            strokeWidth: 3,
+                            style: { filter: 'drop-shadow(0 0 8px #FFD70080)' },
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="Silver"
+                          stroke="#78909C"
+                          strokeWidth={3}
+                          fill="url(#trendSilver)"
+                          dot={{ fill: '#78909C', r: 4, strokeWidth: 2, stroke: '#1a1f3a' }}
+                          activeDot={{
+                            r: 7,
+                            fill: '#78909C',
+                            stroke: '#1a1f3a',
+                            strokeWidth: 3,
+                            style: { filter: 'drop-shadow(0 0 8px #78909C80)' },
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="Bronze"
+                          stroke="#FF8A65"
+                          strokeWidth={3}
+                          fill="url(#trendBronze)"
+                          dot={{ fill: '#FF8A65', r: 4, strokeWidth: 2, stroke: '#1a1f3a' }}
+                          activeDot={{
+                            r: 7,
+                            fill: '#FF8A65',
+                            stroke: '#1a1f3a',
+                            strokeWidth: 3,
+                            style: { filter: 'drop-shadow(0 0 8px #FF8A6580)' },
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="Ignition Zone"
+                          stroke="#EF5350"
+                          strokeWidth={3}
+                          fill="url(#trendIgnition)"
+                          dot={{ fill: '#EF5350', r: 4, strokeWidth: 2, stroke: '#1a1f3a' }}
+                          activeDot={{
+                            r: 7,
+                            fill: '#EF5350',
+                            stroke: '#1a1f3a',
+                            strokeWidth: 3,
+                            style: { filter: 'drop-shadow(0 0 8px #EF535080)' },
+                          }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                </Grid>
+              )}
+
+              {/* ── Average Score Trend (Line + Area) ── */}
+              {scoreTrendData.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <ChartCard
+                    title="Average Score Trend"
+                    emoji="📈"
+                    subtitle="Organization-wide performance trajectory"
+                    accentColor="#00BFA5"
+                    delay={5}
+                  >
+                    <ResponsiveContainer width="100%" height={320}>
+                      <AreaChart data={scoreTrendData}>
+                        <defs>
+                          <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#00BFA5" stopOpacity={0.5} />
+                            <stop offset="50%" stopColor="#00BFA5" stopOpacity={0.15} />
+                            <stop offset="95%" stopColor="#00BFA5" stopOpacity={0} />
+                          </linearGradient>
+                          <filter id="scoreGlow">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis
+                          dataKey="month"
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                        />
+                        <YAxis
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                          domain={[0, 100]}
+                          label={{
+                            value: 'Score',
+                            angle: -90,
+                            position: 'insideLeft',
+                            style: { fill: 'rgba(255,255,255,0.3)', fontSize: 11 },
+                          }}
+                        />
+                        <Tooltip content={<CustomTooltip accentColor="#00BFA5" />} />
+                        <Area
+                          type="monotone"
+                          dataKey="avgScore"
+                          name="Avg Score"
+                          stroke="#00BFA5"
+                          strokeWidth={4}
+                          fill="url(#scoreFill)"
+                          filter="url(#scoreGlow)"
+                          dot={{
+                            fill: '#00BFA5',
+                            r: 5,
+                            strokeWidth: 3,
+                            stroke: '#0f1629',
+                          }}
+                          activeDot={{
+                            r: 9,
+                            fill: '#00BFA5',
+                            stroke: '#0f1629',
+                            strokeWidth: 4,
+                            style: { filter: 'drop-shadow(0 0 12px #00BFA5)' },
+                          }}
+                        />
+                        {/* Reference line at 50 */}
+                        <CartesianGrid
+                          horizontalPoints={[50]}
+                          stroke="rgba(0,191,165,0.2)"
+                          strokeDasharray="8 4"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+
+                    {/* Mini stat under chart */}
+                    <Box
+                      sx={{
+                        mt: 2,
+                        p: 1.5,
+                        borderRadius: 2,
+                        background: 'rgba(0,191,165,0.08)',
+                        border: '1px solid rgba(0,191,165,0.15)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: 1.5,
+                      }}
+                    >
+                      <TrendingUpIcon sx={{ color: '#00BFA5', fontSize: 18 }} />
+                      <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', fontWeight: 600 }}>
+                        Latest:{' '}
+                        <Box component="span" sx={{ color: '#00BFA5', fontWeight: 900, fontSize: '0.85rem' }}>
+                          {scoreTrendData[scoreTrendData.length - 1]?.avgScore || 0}
+                        </Box>
+                        {' '}/ 100
+                      </Typography>
+                    </Box>
+                  </ChartCard>
+                </Grid>
+              )}
+
+              {/* ── Badge Distribution Trend ── */}
+              {badgeTrendData.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <ChartCard
+                    title="Badges Awarded"
+                    emoji="🏅"
+                    subtitle="Monthly badge distribution across all managers"
+                    accentColor="#FFD700"
+                    delay={6}
+                  >
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={badgeTrendData} barCategoryGap="30%">
+                        <defs>
+                          <linearGradient id="badgeGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#FFD700" stopOpacity={1} />
+                            <stop offset="50%" stopColor="#FFA000" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="#FF6F00" stopOpacity={0.6} />
+                          </linearGradient>
+                          <filter id="badgeGlow">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                        <XAxis
+                          dataKey="month"
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                        />
+                        <YAxis
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
+                          axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                          allowDecimals={false}
+                          label={{
+                            value: 'Badges',
+                            angle: -90,
+                            position: 'insideLeft',
+                            style: { fill: 'rgba(255,255,255,0.3)', fontSize: 11 },
+                          }}
+                        />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload?.length) return null;
+                            return (
+                              <Box
+                                sx={{
+                                  background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                                  border: '1px solid #FFD70060',
+                                  borderRadius: 2,
+                                  p: 1.5,
+                                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(255,215,0,0.15)',
+                                }}
+                              >
+                                <Typography sx={{ fontWeight: 700, color: '#FFD700', fontSize: '0.8rem', mb: 0.3 }}>
+                                  {label}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                  <Typography sx={{ fontSize: '1rem' }}>🏅</Typography>
+                                  <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem' }}>
+                                    {payload[0].value} badges
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            );
+                          }}
+                        />
+                        <Bar
+                          dataKey="totalBadges"
+                          fill="url(#badgeGrad)"
+                          radius={[10, 10, 0, 0]}
+                          filter="url(#badgeGlow)"
+                          animationDuration={1800}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                    {/* Total badges summary */}
+                    <Box
+                      sx={{
+                        mt: 2,
+                        p: 1.5,
+                        borderRadius: 2,
+                        background: 'rgba(255,215,0,0.08)',
+                        border: '1px solid rgba(255,215,0,0.15)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: 1.5,
+                      }}
+                    >
+                      <TrophyIcon sx={{ color: '#FFD700', fontSize: 18 }} />
+                      <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', fontWeight: 600 }}>
+                        Total Across All Months:{' '}
+                        <Box component="span" sx={{ color: '#FFD700', fontWeight: 900, fontSize: '0.85rem' }}>
+                          {badgeTrendData.reduce((sum, d) => sum + d.totalBadges, 0)}
+                        </Box>
+                      </Typography>
+                    </Box>
+                  </ChartCard>
+                </Grid>
+              )}
+
+              {/* ── Comparative Radar-style Summary ── */}
+              <Grid item xs={12}>
+                <ChartCard
+                  title="Season Summary"
+                  emoji="🎖️"
+                  subtitle="Quick glance at the current battle season performance"
+                  accentColor="#00BFA5"
+                  delay={7}
+                >
+                  <Grid container spacing={3}>
+                    {/* Left - Key Metrics */}
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        {[
+                          {
+                            label: 'Gold Rate',
+                            value: stats.totalManagers > 0 ? ((stats.goldCount / stats.totalManagers) * 100).toFixed(1) : '0',
+                            suffix: '%',
+                            color: '#FFD700',
+                            icon: '🥇',
+                          },
+                          {
+                            label: 'Silver Rate',
+                            value: stats.totalManagers > 0 ? ((stats.silverCount / stats.totalManagers) * 100).toFixed(1) : '0',
+                            suffix: '%',
+                            color: '#78909C',
+                            icon: '🥈',
+                          },
+                          {
+                            label: 'Bronze Rate',
+                            value: stats.totalManagers > 0 ? ((stats.bronzeCount / stats.totalManagers) * 100).toFixed(1) : '0',
+                            suffix: '%',
+                            color: '#FF8A65',
+                            icon: '🥉',
+                          },
+                          {
+                            label: 'Ignition Rate',
+                            value: stats.totalManagers > 0 ? ((stats.ignitionCount / stats.totalManagers) * 100).toFixed(1) : '0',
+                            suffix: '%',
+                            color: '#EF5350',
+                            icon: '🔥',
+                          },
+                        ].map((metric, i) => (
+                          <Box
+                            key={i}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              p: 1.5,
+                              borderRadius: 2,
+                              background: `${metric.color}08`,
+                              border: `1px solid ${metric.color}15`,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                background: `${metric.color}15`,
+                                transform: 'translateX(4px)',
+                              },
+                            }}
+                          >
+                            <Typography sx={{ fontSize: '1.3rem' }}>{metric.icon}</Typography>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                {metric.label}
+                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                                <Typography sx={{ fontWeight: 900, fontSize: '1.3rem', color: metric.color }}>
+                                  {metric.value}
+                                </Typography>
+                                <Typography sx={{ fontSize: '0.8rem', color: metric.color, fontWeight: 600 }}>
+                                  {metric.suffix}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            {/* Progress bar */}
+                            <Box sx={{ width: 80 }}>
+                              <Box sx={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                                <Box
+                                  sx={{
+                                    height: '100%',
+                                    width: `${parseFloat(metric.value as string)}%`,
+                                    borderRadius: 3,
+                                    background: `linear-gradient(90deg, $${metric.color}, $${metric.color}80)`,
+                                    boxShadow: `0 0 8px ${metric.color}50`,
+                                    transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  }}
+                                />
+                                />
+                              </Box>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Grid>
+
+                    {/* Center - Big Score Display */}
+                    <Grid item xs={12} md={4}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          height: '100%',
+                          py: 2,
+                        }}
+                      >
+                        {/* Animated Score Ring */}
+                        <Box sx={{ position: 'relative', mb: 2 }}>
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              inset: -15,
+                              borderRadius: '50%',
+                              background: 'radial-gradient(circle, rgba(0,191,165,0.1) 0%, transparent 70%)',
+                              animation: `${pulse} 3s ease-in-out infinite`,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              inset: -8,
+                              borderRadius: '50%',
+                              border: '2px solid rgba(0,191,165,0.1)',
+                              animation: `${rotate} 20s linear infinite`,
+                              borderTopColor: '#00BFA5',
+                            }}
+                          />
+                          <ProgressRing
+                            value={stats.avgScore}
+                            max={100}
+                            size={150}
+                            strokeWidth={10}
+                            color="#00BFA5"
+                            glowColor="#00E5FF"
+                            label=""
+                            icon={
+                              <Typography
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 800,
+                                  color: '#00BFA5',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '2px',
+                                }}
+                              >
+                                AVG
+                              </Typography>
+                            }
+                          />
+                        </Box>
+
+                        <Typography
+                          sx={{
+                            fontWeight: 900,
+                            fontSize: '0.8rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '3px',
+                            color: '#00BFA5',
+                            mt: 1,
+                          }}
+                        >
+                          Overall Score
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '0.7rem',
+                            color: 'rgba(255,255,255,0.35)',
+                            mt: 0.5,
+                          }}
+                        >
+                          {selectedMonth} season performance
+                        </Typography>
+
+                        {/* Score classification chip */}
+                        <Chip
+                          icon={
+                            <SparkleIcon
+                              sx={{
+                                fontSize: 14,
+                                color: `${
+                                  stats.avgScore >= 80
+                                    ? '#FFD700'
+                                    : stats.avgScore >= 60
+                                    ? '#78909C'
+                                    : stats.avgScore >= 40
+                                    ? '#FF8A65'
+                                    : '#EF5350'
+                                } !important`,
+                              }}
+                            />
+                          }
+                          label={
+                            stats.avgScore >= 80
+                              ? 'GOLD TERRITORY'
+                              : stats.avgScore >= 60
+                              ? 'SILVER TERRITORY'
+                              : stats.avgScore >= 40
+                              ? 'BRONZE TERRITORY'
+                              : 'IGNITION ZONE'
+                          }
+                          size="small"
+                          sx={{
+                            mt: 2,
+                            fontWeight: 800,
+                            fontSize: '0.65rem',
+                            letterSpacing: '1px',
+                            background:
+                              stats.avgScore >= 80
+                                ? 'rgba(255,215,0,0.15)'
+                                : stats.avgScore >= 60
+                                ? 'rgba(120,144,156,0.15)'
+                                : stats.avgScore >= 40
+                                ? 'rgba(255,138,101,0.15)'
+                                : 'rgba(239,83,80,0.15)',
+                            color:
+                              stats.avgScore >= 80
+                                ? '#FFD700'
+                                : stats.avgScore >= 60
+                                ? '#B0BEC5'
+                                : stats.avgScore >= 40
+                                ? '#FF8A65'
+                                : '#EF5350',
+                            border: `1px solid ${
+                              stats.avgScore >= 80
+                                ? '#FFD70040'
+                                : stats.avgScore >= 60
+                                ? '#78909C40'
+                                : stats.avgScore >= 40
+                                ? '#FF8A6540'
+                                : '#EF535040'
+                            }`,
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+
+                    {/* Right - Quick Insights */}
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        {/* Top performer insight */}
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2.5,
+                            background: 'linear-gradient(135deg, rgba(0,191,165,0.1) 0%, rgba(0,229,255,0.05) 100%)',
+                            border: '1px solid rgba(0,191,165,0.15)',
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Typography sx={{ fontSize: '1rem' }}>🏆</Typography>
+                            <Typography
+                              sx={{
+                                fontSize: '0.65rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '1.5px',
+                                color: '#00BFA5',
+                              }}
+                            >
+                              Quick Stats
+                            </Typography>
+                          </Box>
+                          <Divider sx={{ borderColor: 'rgba(0,191,165,0.1)', mb: 1.5 }} />
+
+                          {[
+                            {
+                              label: 'Total Managers',
+                              value: stats.totalManagers,
+                              icon: '👥',
+                            },
+                            {
+                              label: 'Avg Score',
+                              value: stats.avgScore.toFixed(1),
+                              icon: '⚡',
+                            },
+                            {
+                              label: 'Top Band Holders',
+                              value: stats.goldCount + stats.silverCount,
+                              icon: '🌟',
+                            },
+                            {
+                              label: 'Needs Improvement',
+                              value: stats.ignitionCount,
+                              icon: '🔥',
+                            },
+                          ].map((item, i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                py: 0.8,
+                                borderBottom:
+                                  i < 3
+                                    ? '1px solid rgba(255,255,255,0.04)'
+                                    : 'none',
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography sx={{ fontSize: '0.85rem' }}>
+                                  {item.icon}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    fontSize: '0.72rem',
+                                    color: 'rgba(255,255,255,0.45)',
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {item.label}
+                                </Typography>
+                              </Box>
+                              <Typography
+                                sx={{
+                                  fontWeight: 900,
+                                  fontSize: '0.9rem',
+                                  color: '#fff',
+                                }}
+                              >
+                                {item.value}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+
+                        {/* Health indicator */}
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2.5,
+                            background:
+                              stats.avgScore >= 60
+                                ? 'linear-gradient(135deg, rgba(0,191,165,0.12) 0%, rgba(102,187,106,0.06) 100%)'
+                                : 'linear-gradient(135deg, rgba(239,83,80,0.12) 0%, rgba(255,138,101,0.06) 100%)',
+                            border: `1px solid ${
+                              stats.avgScore >= 60
+                                ? 'rgba(0,191,165,0.2)'
+                                : 'rgba(239,83,80,0.2)'
+                            }`,
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: '50%',
+                                background:
+                                  stats.avgScore >= 60 ? '#00BFA5' : '#EF5350',
+                                boxShadow: `0 0 10px ${
+                                  stats.avgScore >= 60
+                                    ? '#00BFA580'
+                                    : '#EF535080'
+                                }`,
+                                animation: `${pulse} 2s ease-in-out infinite`,
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontSize: '0.7rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '1.5px',
+                                color:
+                                  stats.avgScore >= 60 ? '#00BFA5' : '#EF5350',
+                              }}
+                            >
+                              {stats.avgScore >= 80
+                                ? 'Excellent Health'
+                                : stats.avgScore >= 60
+                                ? 'Good Health'
+                                : stats.avgScore >= 40
+                                ? 'Needs Attention'
+                                : 'Critical'}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            sx={{
+                              fontSize: '0.68rem',
+                              color: 'rgba(255,255,255,0.35)',
+                              mt: 0.8,
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {stats.avgScore >= 60
+                              ? `${stats.goldCount + stats.silverCount} managers are performing above expectations this season.`
+                              : `${stats.ignitionCount + stats.bronzeCount} managers need coaching and support to improve.`}
+                          </Typography>
+                        </Box>
+
+                        {/* Season progress */}
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2.5,
+                            background:
+                              'linear-gradient(135deg, rgba(124,77,255,0.1) 0%, rgba(224,64,251,0.05) 100%)',
+                            border: '1px solid rgba(124,77,255,0.15)',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography sx={{ fontSize: '0.85rem' }}>📅</Typography>
+                              <Typography
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '1.5px',
+                                  color: '#B388FF',
+                                }}
+                              >
+                                Seasons Tracked
+                              </Typography>
+                            </Box>
+                            <Typography
+                              sx={{
+                                fontWeight: 900,
+                                color: '#B388FF',
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {availableMonths.length}
+                            </Typography>
+                          </Box>
+                          {/* Mini month indicators */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              gap: 0.5,
+                              mt: 1.5,
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            {availableMonths.map((month, i) => (
+                              <Box
+                                key={i}
+                                sx={{
+                                  width: 24,
+                                  height: 6,
+                                  borderRadius: 3,
+                                  background:
+                                    month === selectedMonth
+                                      ? '#B388FF'
+                                      : 'rgba(179,136,255,0.2)',
+                                  boxShadow:
+                                    month === selectedMonth
+                                      ? '0 0 8px rgba(179,136,255,0.5)'
+                                      : 'none',
+                                  transition: 'all 0.3s ease',
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </ChartCard>
+              </Grid>
+
+              {/* ── Performance Heatmap Bar ── */}
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 4,
+                    background: 'linear-gradient(160deg, #0f1629 0%, #1a1f3a 50%, #0d1321 100%)',
+                    border: '1px solid rgba(0,191,165,0.15)',
+                    boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
+                    animation: `${slideUp} 1.2s ease-out`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mb: 2,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Box
+                        sx={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(0,191,165,0.1)',
+                          border: '1px solid rgba(0,191,165,0.2)',
+                          fontSize: '1.1rem',
+                        }}
+                      >
+                        🎯
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontWeight: 800,
+                          color: '#fff',
+                          fontSize: '0.95rem',
+                        }}
+                      >
+                        Performance Heatmap
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontSize: '0.65rem',
+                        color: 'rgba(255,255,255,0.3)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {selectedMonth}
+                    </Typography>
+                  </Box>
+
+                  {/* Heatmap strip */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 0.5,
+                      height: 40,
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {[
+                      {
+                        label: 'Ignition',
+                        value: stats.ignitionCount,
+                        color: '#EF5350',
+                      },
+                      {
+                        label: 'Bronze',
+                        value: stats.bronzeCount,
+                        color: '#FF8A65',
+                      },
+                      {
+                        label: 'Silver',
+                        value: stats.silverCount,
+                        color: '#78909C',
+                      },
+                      {
+                        label: 'Gold',
+                        value: stats.goldCount,
+                        color: '#FFD700',
+                      },
+                    ]
+                      .filter((b) => b.value > 0)
+                      .map((band, i) => {
+                        const pct =
+                          (band.value / stats.totalManagers) * 100;
+                        return (
+                          <Box
+                            key={i}
+                            sx={{
+                              flex: pct,
+                              background: `linear-gradient(180deg, ${band.color} 0%, ${band.color}90 100%)`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: 1,
+                              transition: 'all 0.5s ease',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              '&::after': {
+                                content: '""',
+                                position: 'absolute',
+                                inset: 0,
+                                background:
+                                  'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 60%)',
+                              },
+                              '&:hover': {
+                                flex: pct * 1.5,
+                                boxShadow: `0 0 20px ${band.color}50`,
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: '0.65rem',
+                                fontWeight: 800,
+                                color: 'rgba(0,0,0,0.7)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                zIndex: 1,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {pct >= 15
+                                ? `${band.label} ${pct.toFixed(0)}%`
+                                : `${pct.toFixed(0)}%`}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                  </Box>
+
+                  {/* Heatmap legend */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: 3,
+                      mt: 2,
+                    }}
+                  >
+                    {[
+                      { label: 'Ignition', color: '#EF5350', value: stats.ignitionCount },
+                      { label: 'Bronze', color: '#FF8A65', value: stats.bronzeCount },
+                      { label: 'Silver', color: '#78909C', value: stats.silverCount },
+                      { label: 'Gold', color: '#FFD700', value: stats.goldCount },
+                    ].map((item, i) => (
+                      <Box
+                        key={i}
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}
+                      >
+                        <Box
+                          sx={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: item.color,
+                            boxShadow: `0 0 6px ${item.color}60`,
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: '0.68rem',
+                            color: 'rgba(255,255,255,0.5)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: '0.72rem',
+                            color: item.color,
+                            fontWeight: 800,
+                          }}
+                        >
+                          ({item.value})
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          )}
+        </>
+      )}
+    </Box>
+  );
+}
