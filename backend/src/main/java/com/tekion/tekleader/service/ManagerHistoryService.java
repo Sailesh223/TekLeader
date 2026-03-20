@@ -63,6 +63,10 @@ public class ManagerHistoryService {
             .displayName(manager.getDisplayName())
             .email(manager.getEmail())
             .avatarUrl(manager.getAvatarUrl())
+            .overallXP(manager.getOverallXP() != null ? manager.getOverallXP() : BigDecimal.ZERO)
+            .seasonalXP(manager.getSeasonalXP() != null ? manager.getSeasonalXP() : BigDecimal.ZERO)
+            .currentStreak(manager.getCurrentStreak() != null ? manager.getCurrentStreak() : 0)
+            .longestStreak(manager.getLongestStreak() != null ? manager.getLongestStreak() : 0)
             .build();
     }
 
