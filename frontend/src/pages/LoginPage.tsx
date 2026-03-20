@@ -47,14 +47,14 @@ function RiveAnimationSection() {
   return (
     <Box
       sx={{
-        flex: 1.5, // Balanced ratio - slightly left of center (1.5:1 ratio)
+        flex: 2, // Balanced ratio - slightly left of center (1.5:1 ratio)
         display: { xs: 'none', md: 'flex' },
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         flexDirection: 'column',
         p: 0,
-        background: 'linear-gradient(135deg, #EAEAEA 0%, #EFEFEF 25%, #EDEDED 50%, #E9E9E9 75%, #ECECEC 100%)',
+        background: 'radial-gradient(ellipse at center, #FFFFFF 0%, #F5F5F5 30%, #ECECEC 60%, #e0dede 100%)',
         overflow: 'hidden',
       }}
     >

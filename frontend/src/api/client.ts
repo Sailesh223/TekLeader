@@ -197,6 +197,10 @@ export interface ManagerHistoryResponse {
     displayName: string;
     email: string;
     avatarUrl: string | null;
+    overallXP: number;
+    seasonalXP: number;
+    currentStreak: number;
+    longestStreak: number;
   };
   history: MonthlyPerformance[];
   summary: PerformanceSummary;

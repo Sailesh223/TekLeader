@@ -30,6 +30,10 @@ public class ManagerHistoryResponse {
         private String displayName;
         private String email;
         private String avatarUrl;
+        private BigDecimal overallXP;
+        private BigDecimal seasonalXP;
+        private Integer currentStreak;
+        private Integer longestStreak;
     }
 
     @Data
