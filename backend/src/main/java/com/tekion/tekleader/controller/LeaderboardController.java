@@ -102,5 +102,14 @@ public class LeaderboardController {
         List<Map<String, Object>> leaderboard = leaderboardService.getOverallLeaderboard();
         return ResponseEntity.ok(leaderboard);
     }
+
+    @PostMapping("/recalculate-xp")
+    @Operation(summary = "Recalculate XP and streaks", description = "Recalculate overall XP, seasonal XP, and streaks for all managers")
+    public ResponseEntity<Map<String, String>> recalculateXPAndStreaks() {
+        leaderboardService.recalculateAllManagerXPAndStreaks();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "XP and streaks recalculated successfully for all managers");
+        return ResponseEntity.ok(response);
+    }
 }
 

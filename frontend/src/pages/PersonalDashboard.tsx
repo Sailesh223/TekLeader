@@ -301,48 +301,30 @@ export default function PersonalDashboard() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
               color: 'white',
               cursor: 'pointer',
-              '&:hover': { transform: 'scale(1.02)', transition: 'all 0.3s' },
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px) scale(1.02)',
+                boxShadow: '0 12px 24px rgba(0, 191, 165, 0.4)',
+              },
             }}
             onClick={() => {
               setAchievementType('levelup');
               setAchievementOpen(true);
             }}
           >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  🎮 Overall Progress
-                </Typography>
-                <Chip
-                  label={`Level ${calculateLevel(manager.overallXP || 0)}`}
-                  sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                  }}
-                />
-              </Box>
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-                {manager.overallXP?.toFixed(0) || 0} XP
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={getLevelProgress(manager.overallXP || 0)}
+            <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
+              <Typography
+                variant="h6"
                 sx={{
-                  height: 10,
-                  borderRadius: 5,
-                  bgcolor: 'rgba(255, 255, 255, 0.3)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: '#FFD700',
-                  },
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  letterSpacing: '0.5px',
                 }}
-              />
-              <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.9 }}>
-                {getXPToNextLevel(manager.overallXP || 0)} XP to next level
+              >
+                Overall Progress
               </Typography>
             </CardContent>
           </MotionCard>
@@ -353,48 +335,30 @@ export default function PersonalDashboard() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             sx={{
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              background: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
               color: 'white',
               cursor: 'pointer',
-              '&:hover': { transform: 'scale(1.02)', transition: 'all 0.3s' },
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px) scale(1.02)',
+                boxShadow: '0 12px 24px rgba(0, 191, 165, 0.4)',
+              },
             }}
             onClick={() => {
-              setAchievementType('streak');
+              setAchievementType('seasonal');
               setAchievementOpen(true);
             }}
           >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  🔥 Seasonal Progress
-                </Typography>
-                <Chip
-                  label={`Level ${calculateLevel(manager.seasonalXP || 0)}`}
-                  sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                  }}
-                />
-              </Box>
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-                {manager.seasonalXP?.toFixed(0) || 0} XP
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={getLevelProgress(manager.seasonalXP || 0)}
+            <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
+              <Typography
+                variant="h6"
                 sx={{
-                  height: 10,
-                  borderRadius: 5,
-                  bgcolor: 'rgba(255, 255, 255, 0.3)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: '#FFD700',
-                  },
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  letterSpacing: '0.5px',
                 }}
-              />
-              <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.9 }}>
-                {getXPToNextLevel(manager.seasonalXP || 0)} XP to next level
+              >
+                Seasonal Progress
               </Typography>
             </CardContent>
           </MotionCard>
@@ -854,6 +818,12 @@ export default function PersonalDashboard() {
         open={achievementOpen}
         onClose={() => setAchievementOpen(false)}
         type={achievementType}
+        xp={achievementType === 'seasonal' ? (manager?.seasonalXP || 0) : (manager?.overallXP || 0)}
+        level={achievementType === 'seasonal' ? calculateLevel(manager?.seasonalXP || 0) : calculateLevel(manager?.overallXP || 0)}
+        progress={achievementType === 'seasonal' ? getLevelProgress(manager?.seasonalXP || 0) : getLevelProgress(manager?.overallXP || 0)}
+        xpToNext={achievementType === 'seasonal' ? getXPToNextLevel(manager?.seasonalXP || 0) : getXPToNextLevel(manager?.overallXP || 0)}
+        avatarUrl={avatarUrl || manager?.avatarUrl || ''}
+        displayName={manager?.displayName || ''}
       />
 
       {/* Avatar Picker Modal */}

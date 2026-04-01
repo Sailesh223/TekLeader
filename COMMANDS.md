@@ -11,3 +11,7 @@ cd frontend && yarn dev
 export JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home && mvn clean spring-boot:run
 ## Frontend Run
 npm run dev
+## Kafka Run
+brew services start kafka
+## mongo
+mkdir -p ~/data/db && mongod --dbpath ~/data/db

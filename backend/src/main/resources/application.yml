@@ -13,6 +13,19 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: tekleader-badge-notifications
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.tekion.tekleader.event
+
 server:
   port: 8080
   error:
@@ -31,4 +44,14 @@ logging:
     root: INFO
     com.tekion.tekleader: DEBUG
     org.springframework.data.mongodb: DEBUG
+
+# Slack Webhook Configuration
+slack:
+  webhook-url: ${SLACK_WEBHOOK_URL:https://hooks.slack.com/services/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}
+  channel: ${SLACK_CHANNEL:#tekleader-badges}
+
+# Kafka Topics
+kafka:
+  topics:
+    badge-awarded: badge-awarded-events
 

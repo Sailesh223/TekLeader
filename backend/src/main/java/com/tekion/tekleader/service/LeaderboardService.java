@@ -568,7 +568,7 @@ public class LeaderboardService {
         }
     }
 
-    private void recalculateAllManagerXPAndStreaks() {
+    public void recalculateAllManagerXPAndStreaks() {
         log.info("Recalculating XP and streaks for all managers");
 
         try {

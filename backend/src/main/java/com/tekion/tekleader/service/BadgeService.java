@@ -4,6 +4,8 @@ import com.tekion.tekleader.entity.BadgeAward;
 import com.tekion.tekleader.entity.BadgeDefinition;
 import com.tekion.tekleader.entity.Manager;
 import com.tekion.tekleader.entity.MonthlyMetric;
+import com.tekion.tekleader.event.BadgeAwardedEvent;
+import com.tekion.tekleader.kafka.BadgeEventProducer;
 import com.tekion.tekleader.repository.BadgeAwardRepository;
 import com.tekion.tekleader.repository.BadgeDefinitionRepository;
 import com.tekion.tekleader.repository.ManagerRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,7 @@ public class BadgeService {
     private final BadgeAwardRepository badgeAwardRepository;
     private final MonthlyMetricRepository monthlyMetricRepository;
     private final ManagerRepository managerRepository;
+    private final BadgeEventProducer badgeEventProducer;
     
     @Transactional
     public void awardBadgesForMonth(String month) {
@@ -152,6 +156,25 @@ public class BadgeService {
             badgeAwardRepository.save(award);
             log.debug("Awarded badge {} to manager {} for month {}",
                 badge.getCode(), managerId, month);
+
+            // Get manager name for the event
+            Manager manager = managerRepository.findById(managerId).orElse(null);
+            if (manager != null) {
+                // Publish Kafka event for Slack notification
+                BadgeAwardedEvent event = BadgeAwardedEvent.builder()
+                    .managerId(managerId)
+                    .managerName(manager.getDisplayName())
+                    .badgeCode(badge.getCode())
+                    .badgeName(badge.getName())
+                    .month(month)
+                    .awardedBy("System - Auto Award")
+                    .reason("Automatically awarded based on performance metrics")
+                    .awardedAt(LocalDateTime.now())
+                    .isPremium(false)
+                    .build();
+
+                badgeEventProducer.sendBadgeAwardedEvent(event);
+            }
         }
     }
     
@@ -275,6 +298,21 @@ public class BadgeService {
         BadgeAward saved = badgeAwardRepository.save(award);
         log.info("Premium badge awarded to manager {} by functional head {} for month {}",
             managerId, functionalHeadName, month);
+
+        // Publish Kafka event for Slack notification
+        BadgeAwardedEvent event = BadgeAwardedEvent.builder()
+            .managerId(managerId)
+            .managerName(manager.getDisplayName())
+            .badgeCode(badge.getCode())
+            .badgeName("Premium Badge")
+            .month(month)
+            .awardedBy(functionalHeadName)
+            .reason(reason)  // This contains the remarks from the functional head
+            .awardedAt(LocalDateTime.now())
+            .isPremium(true)
+            .build();
+
+        badgeEventProducer.sendBadgeAwardedEvent(event);
 
         return saved;
     }
