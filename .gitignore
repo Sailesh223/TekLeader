@@ -4,4 +4,6 @@ backend/.mvn/
 backend/.idea/
 backend/.DS_Store
 backend/*.iml
+backend/.env
 .DS_Store
+.env
