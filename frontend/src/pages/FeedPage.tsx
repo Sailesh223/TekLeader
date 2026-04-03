@@ -89,7 +89,7 @@ export default function FeedPage() {
     try {
       setSubmitting(true);
       await feedApi.createPost({
-        authorId: userInfo.email,
+        authorId: userInfo.id || userInfo.email,
         content: newPostContent,
       });
       setNewPostContent('');
@@ -246,7 +246,7 @@ export default function FeedPage() {
                   <Box sx={{ position: 'relative' }}>
                     <Avatar
                       src={post.authorAvatar}
-                      sx={{ bgcolor: bandColors.gold, width: 48, height: 48 }}
+                      sx={{ bgcolor: bandColors.Gold.main, width: 48, height: 48 }}
                     >
                       {post.authorName.charAt(0).toUpperCase()}
                     </Avatar>
@@ -278,10 +278,38 @@ export default function FeedPage() {
                   )
                 }
                 title={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <Typography variant="body1" sx={{ fontWeight: 600, color: '#2D3748' }}>
                       {post.authorName}
                     </Typography>
+                    {post.metadata?.rank && (
+                      <Chip
+                        label={`#${post.metadata.rank}`}
+                        size="small"
+                        sx={{
+                          bgcolor: '#7C4DFF',
+                          color: 'white',
+                          fontSize: '0.7rem',
+                          height: 20,
+                          fontWeight: 600
+                        }}
+                      />
+                    )}
+                    {post.metadata?.tier && (
+                      <Chip
+                        label={post.metadata.tier}
+                        size="small"
+                        sx={{
+                          bgcolor: post.metadata.tier === 'Gold' ? '#FFD700' :
+                                   post.metadata.tier === 'Silver' ? '#C0C0C0' :
+                                   post.metadata.tier === 'Bronze' ? '#CD7F32' : '#999',
+                          color: post.metadata.tier === 'Gold' ? '#000' : '#FFF',
+                          fontSize: '0.7rem',
+                          height: 20,
+                          fontWeight: 600
+                        }}
+                      />
+                    )}
                     {post.type !== 'USER_POST' && (
                       <Chip
                         label={post.type === 'BADGE_AWARD' ? 'Badge Awarded' : 'Achievement'}
@@ -359,7 +387,7 @@ export default function FeedPage() {
                           <ListItemAvatar>
                             <Avatar
                               src={comment.authorAvatar}
-                              sx={{ width: 32, height: 32, bgcolor: bandColors.silver }}
+                              sx={{ width: 32, height: 32, bgcolor: bandColors.Silver.main }}
                             >
                               {comment.authorName.charAt(0).toUpperCase()}
                             </Avatar>

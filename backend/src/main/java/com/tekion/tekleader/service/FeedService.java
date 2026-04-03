@@ -3,11 +3,13 @@ package com.tekion.tekleader.service;
 import com.tekion.tekleader.entity.FeedComment;
 import com.tekion.tekleader.entity.FeedPost;
 import com.tekion.tekleader.entity.Manager;
+import com.tekion.tekleader.entity.MonthlyMetric;
 import com.tekion.tekleader.event.BadgeAwardedEvent;
 import com.tekion.tekleader.event.FeedPostCreatedEvent;
 import com.tekion.tekleader.repository.FeedCommentRepository;
 import com.tekion.tekleader.repository.FeedPostRepository;
 import com.tekion.tekleader.repository.ManagerRepository;
+import com.tekion.tekleader.repository.MonthlyMetricRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,7 @@ public class FeedService {
     private final FeedPostRepository feedPostRepository;
     private final FeedCommentRepository feedCommentRepository;
     private final ManagerRepository managerRepository;
+    private final MonthlyMetricRepository monthlyMetricRepository;
     private final KafkaTemplate<String, FeedPostCreatedEvent> kafkaTemplate;
 
     @Value("${tekleader.kafka.topics.feed-post-created}")
@@ -37,12 +40,26 @@ public class FeedService {
         Manager author = managerRepository.findById(authorId)
             .orElseThrow(() -> new RuntimeException("Manager not found"));
 
+        //Arrange
+        Map<String, Object> metadata = new HashMap<>();
+        Optional<MonthlyMetric> latestMetric = getLatestMetric(authorId);
+
+        //Act
+        if (latestMetric.isPresent()) {
+            MonthlyMetric metric = latestMetric.get();
+            metadata.put("rank", metric.getRank());
+            metadata.put("tier", metric.getClassificationBand());
+            metadata.put("finalScore", metric.getFinalScore().doubleValue());
+            metadata.put("month", metric.getMonth());
+        }
+
         FeedPost post = FeedPost.builder()
             .type("USER_POST")
             .authorId(authorId)
             .authorName(author.getDisplayName())
             .content(content)
             .mediaUrls(mediaUrls != null ? mediaUrls : new ArrayList<>())
+            .metadata(metadata)
             .visibility("PUBLIC")
             .likeCount(0)
             .commentCount(0)
@@ -163,17 +180,31 @@ public class FeedService {
 
     public void toggleLike(String postId, String userId) {
         feedPostRepository.findById(postId).ifPresent(post -> {
-            List<String> likedBy = post.getLikes();
-            if (likedBy.contains(userId)) {
+            List<String> likedBy = post.getLikes() != null ? new ArrayList<>(post.getLikes()) : new ArrayList<>();
+
+            //Arrange
+            boolean isCurrentlyLiked = likedBy.contains(userId);
+
+            //Act
+            if (isCurrentlyLiked) {
                 likedBy.remove(userId);
-                post.setLikeCount(post.getLikeCount() - 1);
+                post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
             } else {
                 likedBy.add(userId);
                 post.setLikeCount(post.getLikeCount() + 1);
             }
+
             post.setLikes(likedBy);
             feedPostRepository.save(post);
+
+            log.debug("User {} {} post {}. New like count: {}",
+                userId, isCurrentlyLiked ? "unliked" : "liked", postId, post.getLikeCount());
         });
+    }
+
+    private Optional<MonthlyMetric> getLatestMetric(String managerId) {
+        List<MonthlyMetric> metrics = monthlyMetricRepository.findByManagerIdOrderByMonthDesc(managerId);
+        return metrics.isEmpty() ? Optional.empty() : Optional.of(metrics.get(0));
     }
 }
 

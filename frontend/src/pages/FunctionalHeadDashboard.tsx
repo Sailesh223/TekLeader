@@ -110,6 +110,8 @@ export default function FunctionalHeadDashboard() {
   const [availableBadges, setAvailableBadges] = useState<BadgeDefinition[]>([]);
   const [selectedBadge, setSelectedBadge] = useState('');
   const [badgeReason, setBadgeReason] = useState('');
+  const [badgeMonth, setBadgeMonth] = useState(selectedMonth || '');
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
   const functionalHeadName = userInfo?.displayName || 'Unknown';
 
@@ -117,6 +119,8 @@ export default function FunctionalHeadDashboard() {
     if (selectedMonth) {
       loadHierarchy();
       loadAvailableBadges();
+      loadAvailableMonths();
+      setBadgeMonth(selectedMonth);
     }
   }, [selectedMonth]);
 
@@ -139,11 +143,22 @@ export default function FunctionalHeadDashboard() {
     try {
       const response = await fetch('/api/badges/available');
       const data = await response.json();
-      // Filter to only show Premium Badge (Frame 5) for functional heads
       const premiumBadge = data.filter((badge: BadgeDefinition) => badge.code === 'PREMIUM_BADGE');
       setAvailableBadges(premiumBadge);
     } catch (err) {
       console.error('Failed to load badges', err);
+    }
+  };
+
+  const loadAvailableMonths = async () => {
+    try {
+      const response = await fetch('/api/months');
+      const data = await response.json();
+      // API returns { months: [...], latestMonth: "..." }
+      setAvailableMonths(Array.isArray(data.months) ? data.months : []);
+    } catch (err) {
+      console.error('Failed to load available months', err);
+      setAvailableMonths([]);
     }
   };
 
@@ -158,6 +173,7 @@ export default function FunctionalHeadDashboard() {
     setSelectedManager(null);
     setSelectedBadge('');
     setBadgeReason('');
+    setBadgeMonth(selectedMonth);
   };
 
   const handleSubmitBadge = async () => {
@@ -165,19 +181,18 @@ export default function FunctionalHeadDashboard() {
 
     console.log('🎯 Awarding Premium Badge:', {
       managerId: selectedManager.id,
-      month: selectedMonth,
+      month: badgeMonth,
       functionalHeadName: functionalHeadName,
       reason: badgeReason || 'Outstanding performance',
     });
 
     try {
-      // Use premium badge endpoint for functional heads
       const response = await fetch('/api/badges/award-premium', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           managerId: selectedManager.id,
-          month: selectedMonth,
+          month: badgeMonth,
           functionalHeadName: functionalHeadName,
           reason: badgeReason || 'Outstanding performance',
         }),
@@ -459,6 +474,20 @@ export default function FunctionalHeadDashboard() {
           <Alert severity="info" sx={{ mb: 2 }}>
             As a Functional Head, you can only award the Premium Badge (Frame 5) to managers in your organization.
           </Alert>
+          <FormControl fullWidth sx={{ mt: 2, mb: 2 }}>
+            <InputLabel>Select Month</InputLabel>
+            <Select
+              value={badgeMonth}
+              onChange={(e) => setBadgeMonth(e.target.value)}
+              label="Select Month"
+            >
+              {(availableMonths || []).map((month) => (
+                <MenuItem key={month} value={month}>
+                  {month}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             fullWidth
             multiline
@@ -467,7 +496,6 @@ export default function FunctionalHeadDashboard() {
             value={badgeReason}
             onChange={(e) => setBadgeReason(e.target.value)}
             placeholder="Describe why this manager deserves the Premium Badge..."
-            sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
