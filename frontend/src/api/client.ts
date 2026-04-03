@@ -263,3 +263,128 @@ export const managerApi = {
   },
 };
 
+// Notification types and interfaces
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  actorId?: string;
+  actorName?: string;
+  referenceId?: string;
+  referenceType?: string;
+  metadata?: Record<string, any>;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+  priority: string;
+}
+
+export const notificationApi = {
+  getUserNotifications: async (userId: string): Promise<Notification[]> => {
+    const response = await apiClient.get(`/notifications/${userId}`);
+    return response.data;
+  },
+
+  getUnreadCount: async (userId: string): Promise<number> => {
+    const response = await apiClient.get(`/notifications/${userId}/unread-count`);
+    return response.data.count;
+  },
+
+  markAsRead: async (notificationId: string): Promise<void> => {
+    await apiClient.put(`/notifications/${notificationId}/mark-read`);
+  },
+
+  markAllAsRead: async (userId: string): Promise<void> => {
+    await apiClient.put(`/notifications/${userId}/mark-all-read`);
+  },
+};
+
+// Feed types and interfaces
+export interface FeedPost {
+  id: string;
+  type: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  content: string;
+  mediaUrls?: string[];
+  referenceId?: string;
+  referenceType?: string;
+  metadata?: Record<string, any>;
+  likes: string[];
+  likeCount: number;
+  commentCount: number;
+  isPinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedComment {
+  id: string;
+  postId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreatePostRequest {
+  authorId: string;
+  content: string;
+  mediaUrls?: string[];
+}
+
+export interface AddCommentRequest {
+  authorId: string;
+  content: string;
+}
+
+export const feedApi = {
+  getFeed: async (page: number = 0, size: number = 20): Promise<{ content: FeedPost[]; totalPages: number; totalElements: number }> => {
+    const response = await apiClient.get('/feed', {
+      params: { page, size }
+    });
+    return response.data;
+  },
+
+  createPost: async (request: CreatePostRequest): Promise<FeedPost> => {
+    const response = await apiClient.post('/feed', request);
+    return response.data;
+  },
+
+  addComment: async (postId: string, request: AddCommentRequest): Promise<FeedComment> => {
+    const response = await apiClient.post(`/feed/${postId}/comments`, request);
+    return response.data;
+  },
+
+  getPostComments: async (postId: string): Promise<FeedComment[]> => {
+    const response = await apiClient.get(`/feed/${postId}/comments`);
+    return response.data;
+  },
+
+  toggleLike: async (postId: string, userId: string): Promise<void> => {
+    await apiClient.post(`/feed/${postId}/like`, { userId });
+  },
+};
+
+// Achievement types and interfaces
+export interface Achievement {
+  id: string;
+  managerId: string;
+  type: string;
+  title: string;
+  description: string;
+  metadata?: Record<string, any>;
+  unlockedAt: string;
+}
+
+export const achievementApi = {
+  getManagerAchievements: async (managerId: string): Promise<Achievement[]> => {
+    const response = await apiClient.get(`/achievements/${managerId}`);
+    return response.data;
+  },
+};
+

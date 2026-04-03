@@ -1,6 +1,8 @@
 package com.tekion.tekleader.kafka;
 
 import com.tekion.tekleader.event.BadgeAwardedEvent;
+import com.tekion.tekleader.service.FeedService;
+import com.tekion.tekleader.service.NotificationService;
 import com.tekion.tekleader.service.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +18,11 @@ import org.springframework.stereotype.Component;
 public class BadgeEventConsumer {
 
     private final SlackNotificationService slackNotificationService;
+    private final NotificationService notificationService;
+    private final FeedService feedService;
 
     @KafkaListener(
-        topics = "${kafka.topics.badge-awarded}",
+        topics = "${tekleader.kafka.topics.badge-awarded}",
         groupId = "${spring.kafka.consumer.group-id}"
     )
     public void consumeBadgeAwardedEvent(
@@ -28,15 +32,17 @@ public class BadgeEventConsumer {
     ) {
         log.info("Received badge awarded event from partition: {} with offset: {} for manager: {}",
             partition, offset, event.getManagerName());
-        
+
         try {
-            // Send Slack notification
             slackNotificationService.sendBadgeAwardNotification(event);
-            
+
+            notificationService.createBadgeAwardNotifications(event);
+
+            feedService.createBadgeAwardPost(event);
+
             log.info("Successfully processed badge awarded event for manager: {}", event.getManagerName());
         } catch (Exception e) {
             log.error("Error processing badge awarded event for manager: {}", event.getManagerName(), e);
-            // In production, you might want to implement retry logic or dead letter queue
         }
     }
 }

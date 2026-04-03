@@ -30,21 +30,24 @@ public class BadgeService {
     private final MonthlyMetricRepository monthlyMetricRepository;
     private final ManagerRepository managerRepository;
     private final BadgeEventProducer badgeEventProducer;
+    private final AchievementService achievementService;
     
     @Transactional
     public void awardBadgesForMonth(String month) {
         log.info("Awarding badges for month: {}", month);
-        
+
         List<MonthlyMetric> metrics = monthlyMetricRepository.findByMonth(month);
-        
+
         for (MonthlyMetric metric : metrics) {
             awardOneOnOneChampion(metric);
             awardStreakStar(metric);
             awardHeavyLifter(metric);
+
+            achievementService.checkAndAwardAchievements(metric.getManagerId(), month);
         }
-        
+
         awardMostImproved(month, metrics);
-        
+
         log.info("Badge awarding completed for month: {}", month);
     }
     

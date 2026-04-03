@@ -26,9 +26,11 @@ import {
   EmojiEvents as TrophyIcon,
   CalendarMonth as SeasonalIcon,
   Whatshot as OverallIcon,
+  DynamicFeed as FeedIcon,
 } from '@mui/icons-material';
 import { useStore } from '../store/useStore';
 import UserAvatar from './UserAvatar';
+import NotificationDropdown from './NotificationDropdown';
 
 const DRAWER_WIDTH = 200;
 
@@ -46,6 +48,7 @@ export default function Layout() {
 
   const userMenuItems = [
     { text: 'My Dashboard', icon: <AnalyticsIcon />, path: '/user' },
+    { text: 'Feed', icon: <FeedIcon />, path: '/user/feed' },
     { text: 'Monthly', icon: <LeaderboardIcon />, path: '/user/leaderboard' },
     { text: 'Seasonal', icon: <SeasonalIcon />, path: '/user/seasonal' },
     { text: 'Overall', icon: <OverallIcon />, path: '/user/overall' },
@@ -53,6 +56,7 @@ export default function Layout() {
 
   const adminMenuItems = [
     { text: 'Dashboard', icon: <AdminIcon />, path: '/admin' },
+    { text: 'Feed', icon: <FeedIcon />, path: '/admin/feed' },
     { text: 'Upload Data', icon: <UploadIcon />, path: '/admin/upload' },
     { text: 'Monthly', icon: <LeaderboardIcon />, path: '/admin/leaderboard' },
     { text: 'Seasonal', icon: <SeasonalIcon />, path: '/admin/seasonal' },
@@ -63,6 +67,7 @@ export default function Layout() {
 
   const directorMenuItems = [
     { text: 'My Team', icon: <HierarchyIcon />, path: '/director' },
+    { text: 'Feed', icon: <FeedIcon />, path: '/director/feed' },
     { text: 'Monthly', icon: <LeaderboardIcon />, path: '/director/leaderboard' },
     { text: 'Seasonal', icon: <SeasonalIcon />, path: '/director/seasonal' },
     { text: 'Overall', icon: <OverallIcon />, path: '/director/overall' },
@@ -70,6 +75,7 @@ export default function Layout() {
 
   const functionalHeadMenuItems = [
     { text: 'Organization', icon: <HierarchyIcon />, path: '/functional-head' },
+    { text: 'Feed', icon: <FeedIcon />, path: '/functional-head/feed' },
     { text: 'Monthly', icon: <LeaderboardIcon />, path: '/functional-head/leaderboard' },
     { text: 'Seasonal', icon: <SeasonalIcon />, path: '/functional-head/seasonal' },
     { text: 'Overall', icon: <OverallIcon />, path: '/functional-head/overall' },
@@ -240,10 +246,8 @@ export default function Layout() {
             >
               Performance Progress Perseverance
             </Typography>
-            <IconButton sx={{ color: 'white', mr: 1 }}>
-              <NotificationsIcon />
-            </IconButton>
-            <IconButton sx={{ color: 'white' }}>
+            {userInfo && <NotificationDropdown userId={userInfo.id || userInfo.email || userInfo.displayName} />}
+            <IconButton sx={{ color: 'white' }} onClick={() => navigate('/user/settings')}>
               <SettingsIcon />
             </IconButton>
           </Toolbar>

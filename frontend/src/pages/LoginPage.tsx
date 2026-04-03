@@ -156,7 +156,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleDirectorLogin = () => {
+  const handleDirectorLogin = async () => {
     setError('');
 
     if (!selectedDirector) {
@@ -164,15 +164,40 @@ export default function LoginPage() {
       return;
     }
 
-    setUserInfo({
-      email: '',
-      displayName: selectedDirector,
-      isAdmin: false,
-    });
-    navigate('/director');
+    try {
+      const response = await fetch(`/api/manager/info?displayName=${encodeURIComponent(selectedDirector)}`);
+
+      if (response.ok) {
+        const managerInfo = await response.json();
+        setUserInfo({
+          id: managerInfo.id,
+          email: managerInfo.email || '',
+          displayName: managerInfo.displayName,
+          isAdmin: false,
+        });
+        navigate('/director');
+      } else {
+        setUserInfo({
+          id: undefined,
+          email: '',
+          displayName: selectedDirector,
+          isAdmin: false,
+        });
+        navigate('/director');
+      }
+    } catch (err) {
+      console.error('Failed to fetch director info:', err);
+      setUserInfo({
+        id: undefined,
+        email: '',
+        displayName: selectedDirector,
+        isAdmin: false,
+      });
+      navigate('/director');
+    }
   };
 
-  const handleFunctionalHeadLogin = () => {
+  const handleFunctionalHeadLogin = async () => {
     setError('');
 
     if (!selectedFunctionalHead) {
@@ -180,15 +205,40 @@ export default function LoginPage() {
       return;
     }
 
-    setUserInfo({
-      email: '',
-      displayName: selectedFunctionalHead,
-      isAdmin: false,
-    });
-    navigate('/functional-head');
+    try {
+      const response = await fetch(`/api/manager/info?displayName=${encodeURIComponent(selectedFunctionalHead)}`);
+
+      if (response.ok) {
+        const managerInfo = await response.json();
+        setUserInfo({
+          id: managerInfo.id,
+          email: managerInfo.email || '',
+          displayName: managerInfo.displayName,
+          isAdmin: false,
+        });
+        navigate('/functional-head');
+      } else {
+        setUserInfo({
+          id: undefined,
+          email: '',
+          displayName: selectedFunctionalHead,
+          isAdmin: false,
+        });
+        navigate('/functional-head');
+      }
+    } catch (err) {
+      console.error('Failed to fetch functional head info:', err);
+      setUserInfo({
+        id: undefined,
+        email: '',
+        displayName: selectedFunctionalHead,
+        isAdmin: false,
+      });
+      navigate('/functional-head');
+    }
   };
 
-  const handleUserLogin = () => {
+  const handleUserLogin = async () => {
     setError('');
 
     if (!email || email.trim() === '') {
@@ -199,12 +249,28 @@ export default function LoginPage() {
     // Use the entered name as displayName
     const displayName = email.trim();
 
-    setUserInfo({
-      email: '', // No email for regular users
-      displayName,
-      isAdmin: false,
-    });
-    navigate('/user');
+    try {
+      //Arrange
+      const response = await fetch(`/api/manager/info?displayName=${encodeURIComponent(displayName)}`);
+
+      if (response.ok) {
+        //Act
+        const managerInfo = await response.json();
+        setUserInfo({
+          id: managerInfo.id,
+          email: managerInfo.email || '',
+          displayName: managerInfo.displayName,
+          isAdmin: false,
+        });
+        //Assert
+        navigate('/user');
+      } else {
+        setError('Manager not found in the system. Please check the name.');
+      }
+    } catch (err) {
+      console.error('Failed to fetch manager info:', err);
+      setError('Failed to fetch manager information. Please try again.');
+    }
   };
 
   return (

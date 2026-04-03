@@ -14,6 +14,7 @@ import DirectorDashboard from './pages/DirectorDashboard';
 import FunctionalHeadDashboard from './pages/FunctionalHeadDashboard';
 import SeasonalLeaderboardPage from './pages/SeasonalLeaderboardPage';
 import OverallLeaderboardPage from './pages/OverallLeaderboardPage';
+import FeedPage from './pages/FeedPage';
 
 function App() {
   return (
@@ -25,12 +26,15 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/user" element={<Layout />}>
             <Route index element={<PersonalDashboard />} />
+            <Route path="feed" element={<FeedPage />} />
             <Route path="leaderboard" element={<UserDashboard />} />
             <Route path="seasonal" element={<SeasonalLeaderboardPage />} />
             <Route path="overall" element={<OverallLeaderboardPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="/admin" element={<Layout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="feed" element={<FeedPage />} />
             <Route path="upload" element={<UploadPage />} />
             <Route path="leaderboard" element={<UserDashboard />} />
             <Route path="seasonal" element={<SeasonalLeaderboardPage />} />
@@ -40,12 +44,14 @@ function App() {
           </Route>
           <Route path="/director" element={<Layout />}>
             <Route index element={<DirectorDashboard />} />
+            <Route path="feed" element={<FeedPage />} />
             <Route path="leaderboard" element={<UserDashboard />} />
             <Route path="seasonal" element={<SeasonalLeaderboardPage />} />
             <Route path="overall" element={<OverallLeaderboardPage />} />
           </Route>
           <Route path="/functional-head" element={<Layout />}>
             <Route index element={<FunctionalHeadDashboard />} />
+            <Route path="feed" element={<FeedPage />} />
             <Route path="leaderboard" element={<UserDashboard />} />
             <Route path="seasonal" element={<SeasonalLeaderboardPage />} />
             <Route path="overall" element={<OverallLeaderboardPage />} />
