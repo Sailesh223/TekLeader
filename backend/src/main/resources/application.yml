@@ -54,7 +54,8 @@ logging:
     org.springframework.data.mongodb: DEBUG
 
 # Slack Webhook Configuration
+# Set SLACK_WEBHOOK_URL environment variable to enable Slack notifications
 slack:
-  webhook-url: ${SLACK_WEBHOOK_URL}
+  webhook-url: ${SLACK_WEBHOOK_URL:}
   channel: ${SLACK_CHANNEL:#tekleader-badges}
 

@@ -27,22 +27,27 @@ public class SlackNotificationService {
     private String channel;
 
     public void sendBadgeAwardNotification(BadgeAwardedEvent event) {
+        if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
+            log.debug("Slack webhook URL not configured. Skipping Slack notification.");
+            return;
+        }
+
         try {
             String message = buildBlueThemedMessage(event);
-            
+
             Map<String, Object> payload = new HashMap<>();
             payload.put("channel", channel);
             payload.put("username", "TEKLeader Bot");
             payload.put("icon_emoji", ":trophy:");
             payload.put("blocks", buildMessageBlocks(event));
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            
+
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
-            
+
             restTemplate.postForEntity(webhookUrl, request, String.class);
-            
+
             log.info("Slack notification sent successfully for badge award to: {}", event.getManagerName());
         } catch (Exception e) {
             log.error("Failed to send Slack notification for badge award", e);
