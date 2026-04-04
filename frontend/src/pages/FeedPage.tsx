@@ -150,7 +150,7 @@ export default function FeedPage() {
 
     try {
       const newComment = await feedApi.addComment(postId, {
-        authorId: userInfo.email,
+        authorId: userInfo.id || userInfo.email,
         content: commentText[postId],
       });
       setComments(prev => ({
