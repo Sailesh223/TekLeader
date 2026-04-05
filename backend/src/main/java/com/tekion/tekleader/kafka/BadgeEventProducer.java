@@ -17,7 +17,7 @@ public class BadgeEventProducer {
 
     private final KafkaTemplate<String, BadgeAwardedEvent> kafkaTemplate;
 
-    @Value("${kafka.topics.badge-awarded}")
+    @Value("${tekleader.kafka.topics.badge-awarded}")
     private String badgeAwardedTopic;
 
     public void sendBadgeAwardedEvent(BadgeAwardedEvent event) {

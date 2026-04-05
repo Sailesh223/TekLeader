@@ -9,6 +9,7 @@ import java.util.Optional;
 @Repository
 public interface ManagerRepository extends MongoRepository<Manager, String> {
     Optional<Manager> findByCanonicalName(String canonicalName);
+    Optional<Manager> findByDisplayName(String displayName);
     boolean existsByCanonicalName(String canonicalName);
 }
 

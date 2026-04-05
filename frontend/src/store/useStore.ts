@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface UserInfo {
+  id?: string;
   email: string;
   displayName: string;
   isAdmin: boolean;

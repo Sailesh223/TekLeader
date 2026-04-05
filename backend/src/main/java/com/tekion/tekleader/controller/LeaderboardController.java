@@ -2,6 +2,8 @@ package com.tekion.tekleader.controller;
 
 import com.tekion.tekleader.dto.LeaderboardResponse;
 import com.tekion.tekleader.dto.ManagerHistoryResponse;
+import com.tekion.tekleader.entity.Manager;
+import com.tekion.tekleader.repository.ManagerRepository;
 import com.tekion.tekleader.service.LeaderboardService;
 import com.tekion.tekleader.service.ManagerHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +24,7 @@ public class LeaderboardController {
 
     private final LeaderboardService leaderboardService;
     private final ManagerHistoryService managerHistoryService;
+    private final ManagerRepository managerRepository;
     
     @GetMapping("/leaderboard")
     @Operation(summary = "Get leaderboard", description = "Fetch leaderboard for a specific month with filters")
@@ -78,6 +81,21 @@ public class LeaderboardController {
     public ResponseEntity<ManagerHistoryResponse> getManagerHistory(@RequestParam String displayName) {
         ManagerHistoryResponse response = managerHistoryService.getManagerHistory(displayName);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/manager/info")
+    @Operation(summary = "Get manager info", description = "Get manager ID and basic info by display name")
+    public ResponseEntity<Map<String, String>> getManagerInfo(@RequestParam String displayName) {
+        Manager manager = managerRepository.findByCanonicalName(displayName.toLowerCase())
+            .orElseThrow(() -> new RuntimeException("Manager not found: " + displayName));
+
+        return ResponseEntity.ok(Map.of(
+            "id", manager.getId(),
+            "displayName", manager.getDisplayName(),
+            "email", manager.getEmail() != null ? manager.getEmail() : "",
+            "functionalHead", manager.getFunctionalHead() != null ? manager.getFunctionalHead() : "",
+            "directorName", manager.getDirectorName() != null ? manager.getDirectorName() : ""
+        ));
     }
 
     @GetMapping("/leaderboard/seasonal")

@@ -99,12 +99,16 @@ export default function DirectorDashboard() {
   const [availableBadges, setAvailableBadges] = useState<BadgeDefinition[]>([]);
   const [selectedBadge, setSelectedBadge] = useState('');
   const [badgeReason, setBadgeReason] = useState('');
+  const [badgeMonth, setBadgeMonth] = useState(selectedMonth || '');
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const directorName = userInfo?.displayName || 'Unknown';
 
   useEffect(() => {
     if (selectedMonth && directorName) {
       loadHierarchy();
       loadAvailableBadges();
+      loadAvailableMonths();
+      setBadgeMonth(selectedMonth);
     }
   }, [selectedMonth, directorName]);
 
@@ -135,13 +139,24 @@ export default function DirectorDashboard() {
     try {
       const response = await fetch('/api/badges/available');
       const data = await response.json();
-      // Filter to only show badges 1-4 (not Premium Badge) for directors
       const directorBadges = data.filter((badge: BadgeDefinition) =>
         badge.code !== 'PREMIUM_BADGE'
       );
       setAvailableBadges(directorBadges);
     } catch (err) {
       console.error('Failed to load badges', err);
+    }
+  };
+
+  const loadAvailableMonths = async () => {
+    try {
+      const response = await fetch('/api/months');
+      const data = await response.json();
+      // API returns { months: [...], latestMonth: "..." }
+      setAvailableMonths(Array.isArray(data.months) ? data.months : []);
+    } catch (err) {
+      console.error('Failed to load available months', err);
+      setAvailableMonths([]);
     }
   };
 
@@ -155,6 +170,7 @@ export default function DirectorDashboard() {
     setSelectedManager(null);
     setSelectedBadge('');
     setBadgeReason('');
+    setBadgeMonth(selectedMonth || '');
   };
 
   const handleSubmitBadge = async () => {
@@ -167,7 +183,7 @@ export default function DirectorDashboard() {
         body: JSON.stringify({
           managerId: selectedManager.id,
           badgeCode: selectedBadge,
-          month: selectedMonth,
+          month: badgeMonth,
           awardedBy: directorName,
           reason: badgeReason || 'Awarded by Director',
         }),
@@ -360,6 +376,20 @@ export default function DirectorDashboard() {
             As a Director, you can award badges 1-4 (Streak Star, 1:1 Champion, Most Improved, Heavy Lifter) to your managers.
           </Alert>
           <FormControl fullWidth sx={{ mt: 2, mb: 2 }}>
+            <InputLabel>Select Month</InputLabel>
+            <Select
+              value={badgeMonth}
+              onChange={(e) => setBadgeMonth(e.target.value)}
+              label="Select Month"
+            >
+              {(availableMonths || []).map((month) => (
+                <MenuItem key={month} value={month}>
+                  {month}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Select Badge</InputLabel>
             <Select
               value={selectedBadge}

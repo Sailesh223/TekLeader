@@ -90,12 +90,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initializeBadgeDefinitions() {
-        if (badgeDefinitionRepository.count() > 0) {
-            log.info("Badge definitions already exist, skipping initialization");
-            return;
-        }
-
-        log.info("Creating default badge definitions...");
+        log.info("Checking badge definitions...");
 
         BadgeDefinition streakStar = BadgeDefinition.builder()
                 .code("STREAK_STAR")
@@ -142,13 +137,25 @@ public class DataInitializer implements CommandLineRunner {
                 .active(true)
                 .build();
 
-        badgeDefinitionRepository.save(streakStar);
-        badgeDefinitionRepository.save(oneOnOneChampion);
-        badgeDefinitionRepository.save(mostImproved);
-        badgeDefinitionRepository.save(heavyLifter);
-        badgeDefinitionRepository.save(premiumBadge);
+        // Save or update each badge definition
+        saveOrUpdateBadge(streakStar);
+        saveOrUpdateBadge(oneOnOneChampion);
+        saveOrUpdateBadge(mostImproved);
+        saveOrUpdateBadge(heavyLifter);
+        saveOrUpdateBadge(premiumBadge);
 
         log.info("Default badge definitions created successfully");
+    }
+
+    private void saveOrUpdateBadge(BadgeDefinition badge) {
+        badgeDefinitionRepository.findByCode(badge.getCode())
+            .ifPresentOrElse(
+                existing -> log.debug("Badge definition {} already exists", badge.getCode()),
+                () -> {
+                    badgeDefinitionRepository.save(badge);
+                    log.info("Created badge definition: {}", badge.getCode());
+                }
+            );
     }
 }
 
