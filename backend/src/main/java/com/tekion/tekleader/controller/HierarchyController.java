@@ -50,5 +50,16 @@ public class HierarchyController {
         List<String> functionalHeads = hierarchyService.getAllFunctionalHeadNames();
         return ResponseEntity.ok(functionalHeads);
     }
+
+    @GetMapping("/functional-heads/list/by-month")
+    @Operation(
+        summary = "Get functional heads for specific month",
+        description = "Get date-aware list of functional heads that have data for the specified month. " +
+                     "This ensures new functional heads only appear when filtering to their start month or later."
+    )
+    public ResponseEntity<List<String>> getFunctionalHeadsForMonth(@RequestParam String month) {
+        List<String> functionalHeads = hierarchyService.getFunctionalHeadNamesForMonth(month);
+        return ResponseEntity.ok(functionalHeads);
+    }
 }
 

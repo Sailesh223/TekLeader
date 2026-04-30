@@ -80,6 +80,24 @@ public class HierarchyService {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Get functional head names that have data for a specific month.
+     * This is date-aware and only returns functional heads active in the given month.
+     */
+    public List<String> getFunctionalHeadNamesForMonth(String month) {
+        List<MonthlyMetric> metrics = monthlyMetricRepository.findByMonth(month);
+
+        return metrics.stream()
+            .map(MonthlyMetric::getFunctionalHead)
+            .filter(Objects::nonNull)
+            .filter(name -> !name.isEmpty())
+            .filter(name -> !name.equalsIgnoreCase("Unknown"))
+            .filter(name -> !name.equalsIgnoreCase("Unassigned"))
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
+    }
+
     private HierarchyResponse.FunctionalHeadNode buildFunctionalHeadNode(
         String functionalHead,
         List<MonthlyMetric> metrics,

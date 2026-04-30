@@ -55,6 +55,6 @@ logging:
 
 # Slack Webhook Configuration
 slack:
-  webhook-url: ${SLACK_WEBHOOK_URL:}
+  webhook-url: ${SLACK_WEBHOOK_URL:https://hooks.slack.com/services/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}
   channel: ${SLACK_CHANNEL:#tekleader-badges}
 

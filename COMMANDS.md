@@ -22,6 +22,9 @@ export JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Con
 ## Frontend Run
 npm run dev
 
+## Frontend Clean (Fix Vite Cache Issues)
+cd frontend && rm -rf node_modules/.vite dist && npm install && npm run dev
+
 ## Kafka Run
 brew services start kafka
 ## Check Kafka Status

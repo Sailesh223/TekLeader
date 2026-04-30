@@ -31,10 +31,7 @@ public class ExcelImportService {
     private final BadgeService badgeService;
     private final XPService xpService;
     
-    private static final String MASTER_REPORT_TAB = "Master Report";
-    private static final List<String> FUNCTIONAL_HEADS = Arrays.asList(
-        "Kunal Bhattacharya", "Teza Mukkavilli"
-    );
+
 
     @Transactional
     public UploadResponse processExcelFile(
@@ -52,14 +49,15 @@ public class ExcelImportService {
         int processed = 0, created = 0, updated = 0, skipped = 0, failed = 0;
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
-            Sheet sheet = workbook.getSheet(MASTER_REPORT_TAB);
+            Sheet sheet = findAcceptableSheet(workbook);
 
             if (sheet == null) {
                 throw new IllegalArgumentException(
-                    "Tab '" + MASTER_REPORT_TAB + "' not found in Excel file. Available sheets: " +
-                    String.join(", ", getSheetNames(workbook))
+                    "Excel file contains no sheets. Please ensure your Excel file has at least one sheet with data."
                 );
             }
+
+            log.info("Using sheet: '{}'", sheet.getSheetName());
 
             Row headerRow = sheet.getRow(0);
             Map<String, Integer> columnMap = buildColumnMap(headerRow);
@@ -178,6 +176,18 @@ public class ExcelImportService {
             .uploadId(history.getId())
             .errors(errors)
             .build();
+    }
+
+    private Sheet findAcceptableSheet(Workbook workbook) {
+        // Simply use the first sheet - works with any sheet name
+        if (workbook.getNumberOfSheets() > 0) {
+            Sheet firstSheet = workbook.getSheetAt(0);
+            log.info("Using sheet: '{}' (first sheet in workbook)", firstSheet.getSheetName());
+            return firstSheet;
+        }
+
+        log.error("Excel file contains no sheets");
+        return null;
     }
 
     private List<String> getSheetNames(Workbook workbook) {
