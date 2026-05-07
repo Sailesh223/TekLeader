@@ -13,6 +13,8 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
+    "@okta/okta-auth-js": "^8.0.0",
+    "@okta/okta-react": "^6.11.0",
     "@rive-app/react-canvas": "^4.27.1",
     "axios": "^1.6.2",
     "framer-motion": "^10.16.16",

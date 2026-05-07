@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -28,6 +29,7 @@ import {
   Whatshot as OverallIcon,
   DynamicFeed as FeedIcon,
 } from '@mui/icons-material';
+import { useOktaAuth } from '@okta/okta-react';
 import { useStore } from '../store/useStore';
 import UserAvatar from './UserAvatar';
 import NotificationDropdown from './NotificationDropdown';
@@ -37,12 +39,31 @@ const DRAWER_WIDTH = 200;
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userInfo } = useStore();
+  const { userInfo, setUserInfo } = useStore();
+  const { authState, oktaAuth } = useOktaAuth();
   const isAdminPath = location.pathname.startsWith('/admin');
   const isDirectorPath = location.pathname.startsWith('/director');
   const isFunctionalHeadPath = location.pathname.startsWith('/functional-head');
 
-  const handleLogout = () => {
+  // Sync Okta user to store
+  useEffect(() => {
+    if (authState?.isAuthenticated && authState.idToken?.claims && !userInfo) {
+      const claims = authState.idToken.claims;
+      console.log('✅ Layout: Syncing Okta user to store:', claims);
+      setUserInfo({
+        email: (claims.email as string) || '',
+        displayName: (claims.name as string) || (claims.email as string) || 'Okta User',
+        isAdmin: true, // Okta users get admin access
+      });
+    }
+  }, [authState, userInfo, setUserInfo]);
+
+  const handleLogout = async () => {
+    // Check if user logged in via Okta
+    if (authState?.isAuthenticated) {
+      console.log('🔵 Logging out from Okta...');
+      await oktaAuth.signOut();
+    }
     navigate('/login');
   };
 

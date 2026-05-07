@@ -1,9 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Security } from '@okta/okta-react';
+import { OktaAuth, toRelativeUrl } from '@okta/okta-auth-js';
 import { theme } from './theme';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
+import OktaCallback from './pages/OktaCallback';
 import UserDashboard from './pages/UserDashboard';
 import PersonalDashboard from './pages/PersonalDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -15,15 +18,27 @@ import FunctionalHeadDashboard from './pages/FunctionalHeadDashboard';
 import SeasonalLeaderboardPage from './pages/SeasonalLeaderboardPage';
 import OverallLeaderboardPage from './pages/OverallLeaderboardPage';
 import FeedPage from './pages/FeedPage';
+import oktaConfig from './config/oktaConfig';
 
-function App() {
+const oktaAuth = new OktaAuth(oktaConfig);
+
+function AppContent() {
+  const navigate = useNavigate();
+
+  const restoreOriginalUri = async (_oktaAuth: OktaAuth, originalUri: string) => {
+    console.log('🔵 restoreOriginalUri called with:', originalUri);
+    // Default to /admin/leaderboard for Okta users
+    const uri = toRelativeUrl(originalUri || '/admin/leaderboard', window.location.origin);
+    console.log('🔵 Navigating to:', uri);
+    navigate(uri, { replace: true });
+  };
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/login" element={<LoginPage />} />
+    <Security oktaAuth={oktaAuth} restoreOriginalUri={restoreOriginalUri}>
+          <Routes>
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/login/callback" element={<OktaCallback />} />
           <Route path="/user" element={<Layout />}>
             <Route index element={<PersonalDashboard />} />
             <Route path="feed" element={<FeedPage />} />
@@ -56,7 +71,17 @@ function App() {
             <Route path="seasonal" element={<SeasonalLeaderboardPage />} />
             <Route path="overall" element={<OverallLeaderboardPage />} />
           </Route>
-        </Routes>
+          </Routes>
+        </Security>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <AppContent />
       </Router>
     </ThemeProvider>
   );

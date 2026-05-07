@@ -20,8 +20,10 @@ import {
   VisibilityOff,
   Login as LoginIcon,
   Business as BusinessIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material';
 import { useRive } from '@rive-app/react-canvas';
+import { useOktaAuth } from '@okta/okta-react';
 import { useStore } from '../store/useStore';
 
 function RiveAnimationSection() {
@@ -105,6 +107,7 @@ function RiveAnimationSection() {
 export default function LoginPage() {
   const navigate = useNavigate();
   const { setUserInfo } = useStore();
+  const { oktaAuth } = useOktaAuth();
   const [loginMode, setLoginMode] = useState<'admin' | 'user' | 'director' | 'functional-head'>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -270,6 +273,16 @@ export default function LoginPage() {
     } catch (err) {
       console.error('Failed to fetch manager info:', err);
       setError('Failed to fetch manager information. Please try again.');
+    }
+  };
+
+  const handleOktaLogin = async () => {
+    try {
+      console.log('🔵 Initiating Okta login...');
+      await oktaAuth.signInWithRedirect();
+    } catch (error) {
+      console.error('❌ Okta login failed:', error);
+      setError('Failed to initiate Okta login. Please try again.');
     }
   };
 
@@ -772,6 +785,40 @@ export default function LoginPage() {
             </Button>
           </Box>
         )}
+
+        <Divider sx={{ my: 3, borderColor: 'rgba(11, 18, 32, 0.1)' }}>
+          <Typography variant="caption" sx={{ color: 'rgba(11, 18, 32, 0.4)', px: 2 }}>
+            OR
+          </Typography>
+        </Divider>
+
+        <Button
+          fullWidth
+          variant="outlined"
+          size="large"
+          onClick={handleOktaLogin}
+          sx={{
+            py: 1.5,
+            borderRadius: 2.5,
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            textTransform: 'none',
+            letterSpacing: '0.5px',
+            borderColor: '#0B1220',
+            color: '#0B1220',
+            borderWidth: '2px',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              borderWidth: '2px',
+              borderColor: '#12CFC3',
+              background: 'rgba(18, 207, 195, 0.05)',
+              transform: 'translateY(-1px)',
+            },
+          }}
+        >
+          <LockIcon sx={{ mr: 1, fontSize: '1.1rem' }} />
+          Sign in with Okta SSO
+        </Button>
 
         <Divider sx={{ my: 4, borderColor: 'rgba(11, 18, 32, 0.1)' }} />
 
